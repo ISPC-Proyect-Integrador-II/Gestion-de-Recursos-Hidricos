@@ -1,0 +1,21 @@
+' ******************************************************************************
+' swxJRNL.swj - journal recorded on 04/19/25 by lucho
+' *****************************************************************************
+Dim swApp As Object
+
+Dim Part As Object
+Dim boolstatus As Boolean
+Dim longstatus As Long, longwarnings As Long
+
+Sub main()
+
+Set swApp = _
+Application.SldWorks
+
+Set Part = swApp.OpenDoc6("E:\facu\monorepositorio\telecomunicaciones 2 año\Gestion-de-Recursos-Hidricos\C prototipo\Extructura 3D\version 1_1\Assy_base_tanque.SLDASM", 2, 0, "", longstatus, longwarnings)
+' MSGBOX
+' No se puede abrir E:\facu\monorepositorio\telecomunicaciones 2 año\Gestion-de-Recursos-Hidricos\C prototipo\Extructura 3D\version 1_1\Assy_base_tanque.SLDASM.
+' Versión futura
+
+swApp.ExitApp
+End Sub
