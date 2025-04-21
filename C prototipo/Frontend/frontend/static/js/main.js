@@ -1,0 +1,1 @@
+// JS principal del dashboardpython manage.py runserver

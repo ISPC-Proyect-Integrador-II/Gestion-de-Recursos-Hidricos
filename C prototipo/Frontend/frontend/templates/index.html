@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}Inicio — IoT Dashboard{% endblock %}
+
+{% block extra_css %}
+    {# Ejemplo: si quisieras cargar un CSS de una biblioteca externa #}
+    {# <link rel="stylesheet" href="https://cdn.example.com/library.css"> #}
+{% endblock %}
+
+{% block content %}
+    <section class="hero">
+        <h1>Bienvenido al IoT Dashboard</h1>
+        <p>Control y visualización de métricas de tus dispositivos.</p>
+    </section>
+
+    <section class="metrics-overview">
+        {# Aquí podrías insertar tus tarjetas de métricas o gráficas #}
+        <div id="chart-container">
+            <!-- Canvas para Chart.js, por ejemplo -->
+        </div>
+    </section>
+{% endblock %}
+
+{% block extra_js %}
+    {# Ejemplo: si tienes un script para inicializar gráficas #}
+    {# <script src="{% static 'js/chart-init.js' %}" defer></script> #}
+{% endblock %}

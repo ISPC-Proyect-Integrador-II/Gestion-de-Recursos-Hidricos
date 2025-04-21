@@ -1,0 +1,35 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}IoT Dashboard{% endblock %}</title>
+
+    {# Bloque para estilos adicionales desde páginas hijas #}
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <a href="{% url 'index' %}" class="logo">Mi IoT Dashboard</a>
+            {# Podrías añadir aquí enlaces de menú, iconos, etc. #}
+        </nav>
+    </header>
+
+    <main>
+        {% block content %}
+        <!-- Aquí irá el contenido específico de cada página -->
+        {% endblock %}
+    </main>
+
+    <footer>
+        <p>&copy; {{ now.year }} Mi Empresa — Todos los derechos reservados.</p>
+    </footer>
+
+    {# Bloque para scripts adicionales desde páginas hijas #}
+    <script src="{% static 'js/main.js' %}" defer></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
