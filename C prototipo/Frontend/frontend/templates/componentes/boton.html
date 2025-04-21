@@ -1,0 +1,4 @@
+<button class="btn {{ extra_classes|default:'' }}"
+        {% if url %}onclick="location.href='{{ url }}'"{% endif %}>
+  {{ label }}
+</button>
