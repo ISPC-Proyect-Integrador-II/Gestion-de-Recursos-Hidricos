@@ -10,9 +10,9 @@
 
 
 // En este apartado llamamos a la flag/s que definimos en el .ini de esta forma solo se ejecuta la posicion de codigo que estamos probando en ese momento
-// #ifdef SENSOR_SR04
-//   #include "sensores/sr04/sr04.h"    
-// #endif
+#ifdef SENSOR_SR04
+  #include "sensores/sr04/sr04.h" 
+#endif
 
 void onMqttMessage(char* topic,
                    char* payload,
@@ -52,6 +52,7 @@ void loop() {
 
   // Aca colocamos el iddef de la flag definida, y colocamos el loop correspondiente a ese.
   #ifdef SENSOR_SR04
-    sr04Begin(TRIG_PIN, ECHO_PIN);
-  #endif
+    float d = sr04Read();
+
+  #endiff
 }
