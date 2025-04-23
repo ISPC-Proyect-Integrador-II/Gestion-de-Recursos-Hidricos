@@ -1,0 +1,25 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  …
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="{% url 'index' %}">Inicio</a>
+      <a href="{% url 'metrics' %}">Métricas</a>
+    </nav>
+  </header>
+
+  <main id="content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>
+    &copy; 2025 Mi IoT Dashboard
+  </footer>
+
+  <script src="{% static 'js/main.js' %}" defer></script>
+</body>
+</html>
