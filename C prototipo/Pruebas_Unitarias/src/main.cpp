@@ -40,7 +40,7 @@ void setup() {
   #endif
 
   #ifdef SENSOR_BUZZER
-    buzzerInit(buzzerPin);
+    buzzerInit(BUZZER_PIN);
   #endif
 }
 
@@ -74,14 +74,15 @@ void loop() {
   #endif
   
   #ifdef SENSOR_BUZZER
-    if (Serial.available()) {
-      String cmd = Serial.readStringUntil('\n');
-      cmd.trim();
-      if      (cmd == "100") buzzerSetLevel(A_LOW);
-      else if (cmd == "200") buzzerSetLevel(A_MEDIUM);
-      else if (cmd == "300") buzzerSetLevel(A_HIGH);
-      else                   buzzerSetLevel(A_NONE);
-    }
-    buzzerUpdate();
-  #endif 
+  if (Serial.available()) {
+    String cmd = Serial.readStringUntil('\n');
+    cmd.trim();       
+    // mensajes de referencia: 100, 200, 300. Los cambiaremos proximametne
+    if      (cmd == "100") buzzerSetLevel(A_LOW);
+    else if (cmd == "200") buzzerSetLevel(A_MEDIUM);
+    else if (cmd == "300") buzzerSetLevel(A_HIGH);
+    else                   buzzerSetLevel(A_NONE);
+  }
+  buzzerUpdate();
+  #endif
 }
