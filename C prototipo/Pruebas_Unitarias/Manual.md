@@ -18,11 +18,11 @@ Idealmente, se pueden agregar otras funciones de conexion y deberiamos tener que
 -  ┃ ┗ 📜wifi_async.h
 -  ┣ 📂lib
 -  ┃ ┗ 📜README
--  ┣ 📂sensores             // Aca creamos la carpeta de los sensores que vayamos a testear. 
--  ┃ ┗ 📂sr04
--  ┃ ┃ ┣ 📜sr04.cpp
--  ┃ ┃ ┗ 📜sr04.h
 -  ┣ 📂src                  // Aca van las funciones correspondientes a los .h fijos tambien
+-  ┣ ┗ 📂sensores             // Aca creamos la carpeta de los sensores que vayamos a testear. 
+-  ┃ ┃┗ 📂sr04
+-  ┃ ┃  ┣ 📜sr04.cpp
+-  ┃ ┃  ┗ 📜sr04.h
 -  ┃ ┣ 📜main.cpp
 -  ┃ ┣ 📜mqtt_async.cpp
 -  ┃ ┗ 📜wifi_async.cpp
@@ -38,19 +38,20 @@ Como comente, la intencion es poder agregar uno a uno los sensores, agregar su c
 - Crear la carpeta y respectivos [sensor].h y [sensor].cpp
 - Modificar el platforio.ini [src_filter]
     
-    src_filter =
-        +<src/*>            // Agrega la carpeta src (main, mqtt y wifi)
-        -<sensores/*>       // Saca la carpeta sensores
-        +<sensores/sr04/*>  // suma la carpeta, dentro de sensores, de los que vayamos a probar. 
+    build_src_filter =
+    +<*.cpp>                ; tus .cpp en la raíz de src/
+    +<sensores/sr04/*.cpp>    ; todo lo que haya bajo src/sensores/ cambiarndo la carpeta "sr04" 
 
     // Creamos la bandera con el formato [-D]+SENSOR_[SENSOR] Queda algo como en el ejemplo
     build_flags = -DSENSOR_SR04
 
 - Agregamos lo siguiente en el main:
     
-    // Agregamos un **ifdef** + [flag]. Ahi incluimos el archivo.h indicando la direccion del que vayamos a usar.
+    // Agregamos un **ifdef** + [flag]. Ahi incluimos el archivo.h indicando la direccion del que vayamos a usar y los pines.
     #ifdef SENSOR_SR04
-        #include "sensores/sr04/sr04.h"    
+    #include "sensores/sr04/sr04.h"
+    #define TRIG_PIN 5
+    #define ECHO_PIN 18
     #endif
 
     // Agregamos un **ifdef** + [flag] en el setup con el setup correspondiente para el sensor
