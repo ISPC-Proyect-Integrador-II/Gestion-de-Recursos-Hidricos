@@ -9,7 +9,7 @@
 #define MQTT_PORT   1883
 
 #ifdef SENSOR_SR04
-  #include "../sensores/sr04/sr04.h"
+  #include "sensores/sr04/sr04.h"
   #define TRIG_PIN 5
   #define ECHO_PIN 18
 #endif

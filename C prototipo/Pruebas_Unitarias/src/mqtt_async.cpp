@@ -3,8 +3,8 @@
 #include <AsyncMqttClient.h>
 #include <ArduinoJson.h>
 #include <WiFi.h>
-#include <FreeRTOS.h>
-#include <timers.h>
+#include <freertos/FreeRTOS.h>     
+#include <freertos/timers.h>       
 
 static AsyncMqttClient mqttClient;
 static TimerHandle_t   mqttReconnectTimer;
@@ -53,7 +53,7 @@ void mqttLoop() {
   // Vacío: gestionado por callbacks y timer
 }
 
-void mqttSetCallback(AsyncMqttClientMessageHandler callback) {
+void mqttSetCallback(MqttMessageCallback callback) {
   mqttClient.onMessage(callback);
 }
 
