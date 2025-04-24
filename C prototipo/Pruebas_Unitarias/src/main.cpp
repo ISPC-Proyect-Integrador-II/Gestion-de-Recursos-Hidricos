@@ -14,6 +14,11 @@
   #define ECHO_PIN 18
 #endif
 
+#ifdef SENSOR_BUZZER
+    #include "sensores/buzzer/buzzer.h"
+    #define BUZZER_PIN 5
+#endif
+
 void onMqttMessage(char* topic,
                    char* payload,
                    AsyncMqttClientMessageProperties props,
@@ -33,7 +38,13 @@ void setup() {
   #ifdef SENSOR_SR04
     sr04Begin(TRIG_PIN, ECHO_PIN);
   #endif
+
+  #ifdef SENSOR_BUZZER
+    buzzerInit(buzzerPin);
+  #endif
 }
+
+
 
 void loop() {
   wifiLoop();
@@ -61,4 +72,16 @@ void loop() {
       Serial.println("Lectura SR04 inválida");
     }
   #endif
+  
+  #ifdef SENSOR_BUZZER
+    if (Serial.available()) {
+      String cmd = Serial.readStringUntil('\n');
+      cmd.trim();
+      if      (cmd == "100") buzzerSetLevel(A_LOW);
+      else if (cmd == "200") buzzerSetLevel(A_MEDIUM);
+      else if (cmd == "300") buzzerSetLevel(A_HIGH);
+      else                   buzzerSetLevel(A_NONE);
+    }
+    buzzerUpdate();
+  #endif 
 }
