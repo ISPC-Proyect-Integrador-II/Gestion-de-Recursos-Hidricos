@@ -35,13 +35,15 @@ void onMqttMessage(char* topic,
                    size_t total) {
   Serial.printf("Recibido en %s: %.*s\n",
                 topic, int(len), payload);
+
+  #ifdef ACTUADOR_BOMBA
+    if (String(topic) == "casa/bomba/control") {
+    bomba_1.comando(String(payload).substring(0, len));
+    }
+  #endif
+                
 }
 
-#ifdef ACTUADOR_BOMBA
-if (String(topic) == "casa/bomba/control") {
-  bomba_1.comando(String(payload).substring(0, len));
-}
-#endif
 
 void setup() {
   Serial.begin(115200);
