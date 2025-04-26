@@ -43,8 +43,10 @@ void mqttSetup(const char* server, uint16_t port) {
   mqttClient.onDisconnect(onMqttDisconnect);
   mqttClient.setServer(server, port);
 
-  // Primer intento: solo si WiFi ya está conectado
-  if (wifiIsConnected()) {
+}
+
+void mqttStart() {
+  if (wifiIsConnected() && !_connected) {
     xTimerStart(mqttReconnectTimer, 0);
   }
 }

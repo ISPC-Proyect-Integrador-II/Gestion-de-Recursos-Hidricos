@@ -1,4 +1,6 @@
 #include "wifi_async.h"
+#include "mqtt_async.h"    
+#include <WiFi.h>
 
 static const char* _ssid;
 static const char* _password;
@@ -10,6 +12,7 @@ void onWifiEvent(WiFiEvent_t event) {
     case SYSTEM_EVENT_STA_GOT_IP:
       Serial.printf("WiFi conectado, IP: %s\n", WiFi.localIP().toString().c_str());
       _ready = true;
+      mqttStart();
       break;
     case SYSTEM_EVENT_STA_DISCONNECTED:
       Serial.println("WiFi desconectado, reconectando...");

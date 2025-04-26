@@ -1,31 +1,33 @@
 #include "bomba.h"
 
 bomba::bomba(uint8_t PIN_BOMBA, int umbral)
-  : PIN_BOMBA_(PIN_BOMBA),
-    umbral_(umbral),
-    estado_bomba_(false),
-    estado_timer_(false),
-    timerInicio_(0),
-    timerDuracion_(0)
+  : PIN_BOMBA_(PIN_BOMBA)
+  , umbral_(umbral)
+  , estado_bomba_(false)
+  , estado_timer_(false)
+  , timerInicio_(0)
+  , timerDuracion_(0)
 {}
 
 void bomba::iniciar() {
     pinMode(PIN_BOMBA_, OUTPUT);
-    digitalWrite(PIN_BOMBA_, LOW);  // bomba apagada inicialmente
+    digitalWrite(PIN_BOMBA_, LOW);  // bomba apagada al inicio
 }
 
 void bomba::actualizar() {
     unsigned long now = millis();
 
     if (estado_timer_) {
-        // Si el temporizador expiró, parar la bomba y desactivar timer
         if (now - timerInicio_ >= timerDuracion_) {
             estado_timer_ = false;
             frenar_bomba();
         }
     } else {
-        // Lectura simulada de sensor (reemplazar por analogRead(sensorPin_))
-        int reading = 1000; 
+        unsigned long fase = (now / 7000UL) % 2;
+        int reading = (fase == 0)
+                      ? umbral_ - 10  // 10 unidades por debajo
+                      : umbral_ + 10; // 10 unidades por encima
+
         if (reading >= umbral_) {
             if (!estado_bomba_) encender_bomba();
         } else {

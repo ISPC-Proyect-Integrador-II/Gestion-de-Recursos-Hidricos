@@ -29,5 +29,7 @@ bool mqttPublishJson(const char* topic,
                      bool retain = false);
 /// Suscribe a un topic
 bool mqttSubscribe(const char* topic, uint8_t qos = 0);
+/// disparar la reconexión cuando el Wi-Fi esté listo
+void mqttStart();
 
 #endif // MQTT_ASYNC_H

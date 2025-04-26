@@ -24,26 +24,24 @@
   #define BOMBA_PIN 32
   #define UMBRAL    50
   bomba bomba_1(BOMBA_PIN, UMBRAL);
-#endi
-
+#endif
 
 void onMqttMessage(char* topic,
-                   char* payload,
-                   AsyncMqttClientMessageProperties props,
-                   size_t len,
-                   size_t index,
-                   size_t total) {
-  Serial.printf("Recibido en %s: %.*s\n",
-                topic, int(len), payload);
+  char* payload,
+  AsyncMqttClientMessageProperties props,
+  size_t len,
+  size_t index,
+  size_t total) {
+  String msg = String(payload).substring(0, len);
 
   #ifdef ACTUADOR_BOMBA
-    if (String(topic) == "casa/bomba/control") {
-    bomba_1.comando(String(payload).substring(0, len));
-    }
+  if (String(topic) == "casa/bomba/control") {
+    bomba_1.comando(msg);
+    Serial.printf("Comando → %s\n", msg.c_str());
+  }
   #endif
-                
+  
 }
-
 
 void setup() {
   Serial.begin(115200);
@@ -114,14 +112,42 @@ void loop() {
   #endif
 
   #ifdef ACTUADOR_BOMBA
-    bomba_1.actualizar();
+  static bool subscribed = false;
+  if (!subscribed && wifiIsConnected()) {
+    mqttSubscribe("casa/bomba/control", 0);
+    subscribed = true;
+  }
 
-    // Usa los getters en vez de acceder a miembros privados
-    Serial.println(bomba_1.isOn() ? "Bomba encendida" : "Bomba apagada");
-    Serial.println(bomba_1.isTimerActive() 
-                   ? "Bomba en modo temporizado" 
-                   : "Bomba en modo manual");
+  bomba_1.actualizar();
+
+  // — Detectar cambios de estado —
+  static bool lastOn    = bomba_1.isOn();
+  static bool lastTimer = bomba_1.isTimerActive();
+
+  bool currOn    = bomba_1.isOn();
+  bool currTimer = bomba_1.isTimerActive();
+
+  // Publicar solo cuando cambie ON ↔ OFF
+  if (currOn != lastOn) {
+    Serial.println(currOn ? ">>> Bomba ENCENDIDA" : ">>> Bomba APAGADA");
+    StaticJsonDocument<64> st;
+    st["estado"] = currOn ? "ON" : "OFF";
+    mqttPublishJson("actuador/bomba/estado", st, 1, false);
+  }
+
+  // Publicar solo cuando cambie MANUAL ↔ TEMPORIZADO
+  if (currTimer != lastTimer) {
+    Serial.println(currTimer
+      ? ">>> MODO TEMPORIZADO ACTIVADO"
+      : ">>> MODO MANUAL");
+    StaticJsonDocument<64> st;
+    st["modo"] = currTimer ? "TEMPORIZADO" : "MANUAL";
+    mqttPublishJson("actuador/bomba/estado", st, 1, false);
+  }
+
+  lastOn    = currOn;
+  lastTimer = currTimer;
   #endif
 
-  delay(100);
+delay(200);
 }
