@@ -19,6 +19,14 @@
     #define BUZZER_PIN 5
 #endif
 
+#ifdef ACTUADOR_BOMBA
+  #include "sensores/bomba/bomba.h"
+  #define BOMBA_PIN 32
+  #define UMBRAL    50
+  bomba bomba_1(BOMBA_PIN, UMBRAL);
+#endi
+
+
 void onMqttMessage(char* topic,
                    char* payload,
                    AsyncMqttClientMessageProperties props,
@@ -28,6 +36,12 @@ void onMqttMessage(char* topic,
   Serial.printf("Recibido en %s: %.*s\n",
                 topic, int(len), payload);
 }
+
+#ifdef ACTUADOR_BOMBA
+if (String(topic) == "casa/bomba/control") {
+  bomba_1.comando(String(payload).substring(0, len));
+}
+#endif
 
 void setup() {
   Serial.begin(115200);
@@ -42,8 +56,12 @@ void setup() {
   #ifdef SENSOR_BUZZER
     buzzerInit(BUZZER_PIN);
   #endif
-}
 
+  #ifdef ACTUADOR_BOMBA
+    bomba_1.iniciar();
+    bomba_1.establecer_umbral(UMBRAL);
+  #endif
+}
 
 
 void loop() {
@@ -74,15 +92,34 @@ void loop() {
   #endif
   
   #ifdef SENSOR_BUZZER
-  if (Serial.available()) {
-    String cmd = Serial.readStringUntil('\n');
-    cmd.trim();       
-    // mensajes de referencia: 100, 200, 300. Los cambiaremos proximametne
-    if      (cmd == "100") buzzerSetLevel(A_LOW);
-    else if (cmd == "200") buzzerSetLevel(A_MEDIUM);
-    else if (cmd == "300") buzzerSetLevel(A_HIGH);
-    else                   buzzerSetLevel(A_NONE);
+  if      (cmd == "100") { 
+    currentAlarm = A_LOW; 
+    Serial.println("Alarma nivel bajo activada"); 
+  }
+  else if (cmd == "200") { 
+    currentAlarm = A_MEDIUM; 
+    Serial.println("Alarma nivel medio activada"); 
+  }
+  else if (cmd == "300") { 
+    currentAlarm = A_HIGH; 
+    Serial.println("Alarma nivel alto activada"); 
+  }
+  else { 
+    currentAlarm = A_NONE; 
+    Serial.println("Alarma desactivada");
   }
   buzzerUpdate();
   #endif
+
+  #ifdef ACTUADOR_BOMBA
+    bomba_1.actualizar();
+
+    // Usa los getters en vez de acceder a miembros privados
+    Serial.println(bomba_1.isOn() ? "Bomba encendida" : "Bomba apagada");
+    Serial.println(bomba_1.isTimerActive() 
+                   ? "Bomba en modo temporizado" 
+                   : "Bomba en modo manual");
+  #endif
+
+  delay(100);
 }
