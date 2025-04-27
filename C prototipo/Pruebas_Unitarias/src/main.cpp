@@ -1,14 +1,21 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
+
 #ifdef USE_GSM
   #include "gsm_async.h"
+  // Credenciales GPRS
+  #define APN       "tu_apn"
+  #define GPRS_USER ""
+  #define GPRS_PASS ""
 #else
   #include "wifi_async.h"
 #endif
 #include "mqtt_async.h"
 
-#define SSID        "Vitto"
-#define PASS        "vittorio10"
+#ifndef USE_GSM
+  #define SSID        "Vitto"
+  #define PASS        "vittorio10"
+#endif
 #define MQTT_SERVER "test.mosquitto.org"
 #define MQTT_PORT   1883
 
@@ -19,8 +26,8 @@
 #endif
 
 #ifdef SENSOR_BUZZER
-    #include "sensores/buzzer/buzzer.h"
-    #define BUZZER_PIN 5
+  #include "sensores/buzzer/buzzer.h"
+  #define BUZZER_PIN 5
 #endif
 
 #ifdef ACTUADOR_BOMBA
@@ -31,11 +38,11 @@
 #endif
 
 void onMqttMessage(char* topic,
-  char* payload,
-  AsyncMqttClientMessageProperties props,
-  size_t len,
-  size_t index,
-  size_t total) {
+                   char* payload,
+                   AsyncMqttClientMessageProperties props,
+                   size_t len,
+                   size_t index,
+                   size_t total) {
   String msg = String(payload).substring(0, len);
 
   #ifdef ACTUADOR_BOMBA
@@ -44,12 +51,16 @@ void onMqttMessage(char* topic,
     Serial.printf("Comando → %s\n", msg.c_str());
   }
   #endif
-  
 }
 
 void setup() {
   Serial.begin(115200);
+#ifdef USE_GSM
+  gsmSetup(APN, GPRS_USER, GPRS_PASS);
+#else
   wifiSetup(SSID, PASS);
+#endif
+
   mqttSetup(MQTT_SERVER, MQTT_PORT);
   mqttSetCallback(onMqttMessage);
 
@@ -67,14 +78,20 @@ void setup() {
   #endif
 }
 
-
 void loop() {
+#ifdef USE_GSM
+  gsmLoop();
+#else
   wifiLoop();
+#endif
   mqttLoop();
 
-  // Ejemplo de publicación periódica
   static unsigned long lastPub = 0;
+#ifdef USE_GSM
+  if (millis() - lastPub > 10000 && gsmIsConnected()) {
+#else
   if (millis() - lastPub > 10000 && wifiIsConnected()) {
+#endif
     lastPub = millis();
     StaticJsonDocument<128> doc;
     doc["temperatura"] = random(0, 40);
@@ -86,72 +103,56 @@ void loop() {
     float distancia = sr04Read();
     if (distancia >= 0) {
       Serial.printf("Distancia SR04: %.1f cm\n", distancia);
-      // Publicacion MQTT - Topic sensores/sr04
-        StaticJsonDocument<64> j;
-        j["distancia"] = distancia;
-        mqttPublishJson("sensores/sr04", j, 1, false);
+      StaticJsonDocument<64> j;
+      j["distancia"] = distancia;
+      mqttPublishJson("sensores/sr04", j, 1, false);
     } else {
       Serial.println("Lectura SR04 inválida");
     }
   #endif
-  
+
   #ifdef SENSOR_BUZZER
-  if      (cmd == "100") { 
-    currentAlarm = A_LOW; 
-    Serial.println("Alarma nivel bajo activada"); 
-  }
-  else if (cmd == "200") { 
-    currentAlarm = A_MEDIUM; 
-    Serial.println("Alarma nivel medio activada"); 
-  }
-  else if (cmd == "300") { 
-    currentAlarm = A_HIGH; 
-    Serial.println("Alarma nivel alto activada"); 
-  }
-  else { 
-    currentAlarm = A_NONE; 
-    Serial.println("Alarma desactivada");
-  }
-  buzzerUpdate();
+    buzzerUpdate();
   #endif
 
   #ifdef ACTUADOR_BOMBA
-  static bool subscribed = false;
-  if (!subscribed && wifiIsConnected()) {
-    mqttSubscribe("casa/bomba/control", 0);
-    subscribed = true;
-  }
+    static bool subscribed = false;
+#ifdef USE_GSM
+    if (!subscribed && gsmIsConnected()) {
+#else
+    if (!subscribed && wifiIsConnected()) {
+#endif
+      mqttSubscribe("casa/bomba/control", 0);
+      subscribed = true;
+    }
 
-  bomba_1.actualizar();
+    bomba_1.actualizar();
 
-  // — Detectar cambios de estado —
-  static bool lastOn    = bomba_1.isOn();
-  static bool lastTimer = bomba_1.isTimerActive();
+    static bool lastOn    = bomba_1.isOn();
+    static bool lastTimer = bomba_1.isTimerActive();
 
-  bool currOn    = bomba_1.isOn();
-  bool currTimer = bomba_1.isTimerActive();
+    bool currOn    = bomba_1.isOn();
+    bool currTimer = bomba_1.isTimerActive();
 
-  // Publicar solo cuando cambie ON ↔ OFF
-  if (currOn != lastOn) {
-    Serial.println(currOn ? ">>> Bomba ENCENDIDA" : ">>> Bomba APAGADA");
-    StaticJsonDocument<64> st;
-    st["estado"] = currOn ? "ON" : "OFF";
-    mqttPublishJson("actuador/bomba/estado", st, 1, false);
-  }
+    if (currOn != lastOn) {
+      Serial.println(currOn ? ">>> Bomba ENCENDIDA" : ">>> Bomba APAGADA");
+      StaticJsonDocument<64> st;
+      st["estado"] = currOn ? "ON" : "OFF";
+      mqttPublishJson("actuador/bomba/estado", st, 1, false);
+    }
 
-  // Publicar solo cuando cambie MANUAL ↔ TEMPORIZADO
-  if (currTimer != lastTimer) {
-    Serial.println(currTimer
-      ? ">>> MODO TEMPORIZADO ACTIVADO"
-      : ">>> MODO MANUAL");
-    StaticJsonDocument<64> st;
-    st["modo"] = currTimer ? "TEMPORIZADO" : "MANUAL";
-    mqttPublishJson("actuador/bomba/estado", st, 1, false);
-  }
+    if (currTimer != lastTimer) {
+      Serial.println(currTimer
+        ? ">>> MODO TEMPORIZADO ACTIVADO"
+        : ">>> MODO MANUAL");
+      StaticJsonDocument<64> st;
+      st["modo"] = currTimer ? "TEMPORIZADO" : "MANUAL";
+      mqttPublishJson("actuador/bomba/estado", st, 1, false);
+    }
 
-  lastOn    = currOn;
-  lastTimer = currTimer;
+    lastOn    = currOn;
+    lastTimer = currTimer;
   #endif
 
-delay(200);
+  delay(200);
 }

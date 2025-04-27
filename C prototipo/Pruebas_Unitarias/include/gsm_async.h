@@ -1,6 +1,8 @@
 #ifndef GSM_ASYNC_H
 #define GSM_ASYNC_H
 
+// Define el modelo de módem antes de incluir TinyGsmClient
+#define TINY_GSM_MODEM_SIM800
 #include <TinyGsmClient.h>
 
 /// Inicializa y gestiona GSM/GPRS (attach, APN…)

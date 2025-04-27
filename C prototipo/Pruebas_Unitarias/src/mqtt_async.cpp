@@ -1,3 +1,15 @@
+#include <Arduino.h>
+#include <ArduinoJson.h>
+
+#ifdef USE_GSM
+  #include "gsm_async.h"
+  // Credenciales GPRS
+  #define APN       "tu_apn"
+  #define GPRS_USER ""
+  #define GPRS_PASS ""
+#else
+  #include "wifi_async.h"
+#endif
 #include "mqtt_async.h"
 #include <ArduinoJson.h>
 
@@ -22,17 +34,13 @@ static TimerHandle_t      mqttReconnectTimer;
 static bool              _connected = false;
 #endif
 
-// ------------------------------------------------------------------
-//               Callbacks y reconexión (solo Wi-Fi)
-// ------------------------------------------------------------------
 #ifndef USE_GSM
-// Cuando MQTT conecta (AsyncMqttClient)
+// Callbacks para AsyncMqttClient
 static void onMqttConnect(bool sessionPresent) {
   Serial.println("MQTT conectado");
   _connected = true;
 }
 
-// Cuando MQTT se desconecta
 static void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
   Serial.println("MQTT desconectado, reintentando...");
   _connected = false;
@@ -41,7 +49,6 @@ static void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
   }
 }
 
-// Timer para reconectar
 static void connectToMqtt(TimerHandle_t xTimer) {
   mqttClient.connect();
 }
@@ -53,10 +60,8 @@ static void connectToMqtt(TimerHandle_t xTimer) {
 
 void mqttSetup(const char* server, uint16_t port) {
 #ifdef USE_GSM
-  // Configura PubSubClient sobre GPRS
   mqttClient.setServer(server, port);
 #else
-  // Configura AsyncMqttClient sobre Wi-Fi
   mqttReconnectTimer = xTimerCreate(
     "mqttTimer",
     pdMS_TO_TICKS(5000),
@@ -64,7 +69,6 @@ void mqttSetup(const char* server, uint16_t port) {
     nullptr,
     connectToMqtt
   );
-
   mqttClient.onConnect(onMqttConnect);
   mqttClient.onDisconnect(onMqttDisconnect);
   mqttClient.setServer(server, port);
@@ -73,12 +77,10 @@ void mqttSetup(const char* server, uint16_t port) {
 
 void mqttStart() {
 #ifdef USE_GSM
-  // Conexión síncrona en PubSubClient
   if (gsmIsConnected() && !mqttClient.connected()) {
-    mqttClient.connect();
+    mqttClient.connect("esp32-gsm");
   }
 #else
-  // Desencadena reconexión asíncrona
   if (wifiIsConnected() && !_connected) {
     xTimerStart(mqttReconnectTimer, 0);
   }
@@ -87,16 +89,13 @@ void mqttStart() {
 
 void mqttLoop() {
 #ifdef USE_GSM
-  // Mantiene vivo el cliente PubSubClient
   mqttClient.loop();
 #else
-  // AsyncMqttClient usa timers/callbacks
 #endif
 }
 
 void mqttSetCallback(MqttMessageCallback callback) {
 #ifdef USE_GSM
-  // Adaptador de firma: PubSubClient → MqttMessageCallback
   mqttClient.setCallback([callback]
     (char* topic, byte* payload, unsigned int length) {
       AsyncMqttClientMessageProperties props{};
@@ -115,10 +114,8 @@ bool mqttPublishJson(const char* topic,
   char buf[256];
   size_t len = serializeJson(doc, buf, sizeof(buf));
 #ifdef USE_GSM
-  // Publicación en PubSubClient
   return mqttClient.publish(topic, buf, len);
 #else
-  // Publicación en AsyncMqttClient
   auto packetId = mqttClient.publish(topic, qos, retain, buf, len);
   return packetId != 0;
 #endif
@@ -126,10 +123,8 @@ bool mqttPublishJson(const char* topic,
 
 bool mqttSubscribe(const char* topic, uint8_t qos) {
 #ifdef USE_GSM
-  // Suscripción PubSubClient
   return mqttClient.subscribe(topic, qos);
 #else
-  // Suscripción AsyncMqttClient
   auto packetId = mqttClient.subscribe(topic, qos);
   return packetId != 0;
 #endif
