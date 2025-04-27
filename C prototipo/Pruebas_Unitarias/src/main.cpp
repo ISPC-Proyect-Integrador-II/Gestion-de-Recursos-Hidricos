@@ -1,6 +1,10 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
-#include "wifi_async.h"
+#ifdef USE_GSM
+  #include "gsm_async.h"
+#else
+  #include "wifi_async.h"
+#endif
 #include "mqtt_async.h"
 
 #define SSID        "Vitto"
