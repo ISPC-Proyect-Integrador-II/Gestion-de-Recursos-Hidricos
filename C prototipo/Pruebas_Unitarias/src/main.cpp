@@ -3,7 +3,6 @@
 
 #ifdef USE_GSM
   #include "gsm_async.h"
-  // Credenciales GPRS
   #define APN       "tu_apn"
   #define GPRS_USER ""
   #define GPRS_PASS ""
