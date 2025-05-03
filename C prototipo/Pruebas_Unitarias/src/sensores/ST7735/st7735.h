@@ -1,15 +1,26 @@
-#ifndef ST7735_DRIVER_H
-#define ST7735_DRIVER_H
+#ifndef ST7735DISPLAY_H
+#define ST7735DISPLAY_H
 
-#ifndef LV_CONF_INCLUDE_SIMPLE
-  #define LV_CONF_INCLUDE_SIMPLE
-#endif
+#define LV_CONF_INCLUDE_SIMPLE
 #include "lv_conf.h"
 #include <lvgl.h>
-#include <TFT_eSPI.h>
 
-void initDisplay();
-void handleDisplay();
-void updateSensorLabels(float temperature, float humidity, float pressure);
+class ST7735Display {
+public:
+    ST7735Display();
+    /// Inicializa LVGL y la pantalla
+    void begin();
+    /// Debe llamarse en loop() para procesar LVGL y la transición
+    void update();
 
-#endif
+private:
+    lv_obj_t* scr1 = nullptr;
+    lv_obj_t* scr2 = nullptr;
+    uint32_t startTime = 0;
+    bool transitioned = false;
+
+    /// Callback que LVGL usa para volcar el buffer a la pantalla
+    static void disp_flush(lv_disp_drv_t* disp, const lv_area_t* area, lv_color_t* color_p);
+};
+
+#endif // ST7735DISPLAY_H

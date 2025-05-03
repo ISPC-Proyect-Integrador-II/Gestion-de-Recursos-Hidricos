@@ -1,6 +1,16 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 
+//====================================================================================
+// INCLUDES/LIBRARIES
+//====================================================================================
+// de ser elementos relacionados a un FLAG llamar entre "#ifdef <FLAG>" y "#endif"
+//====================================================================================
+
+
+//==========================
+// CONECTIVIDAD
+//==========================
 #ifdef USE_GSM
   #include "gsm_async.h"
   #define APN        "tu_apn"
@@ -17,6 +27,10 @@
 #define MQTT_SERVER "test.mosquitto.org"
 #define MQTT_PORT   1883
 
+//==========================
+// SENSORES
+//==========================
+
 #ifdef SENSOR_SR04
   #include "sensores/sr04/sr04.h"
   #define TRIG_PIN 5
@@ -28,6 +42,10 @@
   #define BUZZER_PIN 5
 #endif
 
+//==========================
+// ACTUADORES
+//==========================
+
 #ifdef ACTUADOR_BOMBA
   #include "sensores/bomba/bomba.h"
   #define BOMBA_PIN 32
@@ -35,9 +53,11 @@
   bomba bomba_1(BOMBA_PIN, UMBRAL);
 #endif
 
-#ifdef ST7735
-  #include "sensores\ST7735\st7735.h"
-#endif
+//====================================================================================
+// ESTRCUTRUA PARA MSJ MQTT
+//====================================================================================
+// En esto asignamos topics, formtato (json o strg) y QoS
+//====================================================================================
 
 void onMqttMessage(char* topic,
                    char* payload,
@@ -55,9 +75,18 @@ void onMqttMessage(char* topic,
   #endif
 }
 
+//====================================================================================
+// SETUP
+//====================================================================================
+// llamamos a los init de cada elemento, asi como asignar parametros basicos de incio
+//====================================================================================
+
 void setup() {
   Serial.begin(115200);
 
+  //==========================
+  // CONECTIVIDAD
+  //==========================
 
   #ifdef USE_GSM
     gsmSetup(APN, GPRS_USER, GPRS_PASS);
@@ -65,11 +94,12 @@ void setup() {
     wifiSetup(SSID, PASS);
   #endif
 
-
   mqttSetup(MQTT_SERVER, MQTT_PORT);
   mqttSetCallback(onMqttMessage);
 
-
+  //==========================
+  // SENSORES
+  //==========================
   #ifdef SENSOR_SR04
     sr04Begin(TRIG_PIN, ECHO_PIN);
   #endif
@@ -78,17 +108,27 @@ void setup() {
     buzzerInit(BUZZER_PIN);
   #endif
 
+  //==========================
+  // ACTUADORES
+  //==========================
   #ifdef ACTUADOR_BOMBA
     bomba_1.iniciar();
     bomba_1.establecer_umbral(UMBRAL);
   #endif
-
-  #ifdef ST7735
-    initDisplay();    
-  #endif
 }
 
+
+//====================================================================================
+// LOOP
+//====================================================================================
+// llamamos a las funciones que corresponden a cada elemento, y se ejecutan en el loop
+//====================================================================================
+
 void loop() {
+
+  //==========================
+  // CONECTIVIDAD
+  //==========================  
 
   #ifdef USE_GSM
     gsmLoop();
@@ -98,22 +138,9 @@ void loop() {
   mqttLoop();
 
 
-  static unsigned long lastPub = 0;
-  #if defined(USE_GSM)
-    bool netOK = gsmIsConnected();
-  #else
-    bool netOK = wifiIsConnected();
-  #endif
-
-  if (millis() - lastPub > 10000 && netOK) {
-    lastPub = millis();
-    StaticJsonDocument<128> doc;
-    doc["temperatura"] = random(0, 40);
-    doc["humedad"]     = random(20, 80);
-    mqttPublishJson("sensores/data-prueba", doc, 1, false);
-  }
-
-
+  //==========================
+  // SENSORES
+  //==========================
   #ifdef SENSOR_SR04
     float distancia = sr04Read();
     if (distancia >= 0) {
@@ -131,7 +158,9 @@ void loop() {
     buzzerUpdate();
   #endif
 
-
+  //==========================
+  // ACTUADORES
+  //==========================
   #ifdef ACTUADOR_BOMBA
     static bool subscribed = false;
     if (!subscribed && netOK) {
@@ -165,9 +194,8 @@ void loop() {
     lastTimer = currTimer;
   #endif
 
-  #ifdef ST7735
-    handleDisplay();     
-  #endif
+
+
 
   delay(200);
 }
