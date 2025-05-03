@@ -3,18 +3,17 @@
 
 #ifdef USE_GSM
   #include "gsm_async.h"
-  #define APN       "tu_apn"
-  #define GPRS_USER ""
-  #define GPRS_PASS ""
+  #define APN        "tu_apn"
+  #define GPRS_USER  ""
+  #define GPRS_PASS  ""
 #else
   #include "wifi_async.h"
+  #define SSID       "Vitto"
+  #define PASS       "vittorio10"
 #endif
+
 #include "mqtt_async.h"
 
-#ifndef USE_GSM
-  #define SSID        "Vitto"
-  #define PASS        "vittorio10"
-#endif
 #define MQTT_SERVER "test.mosquitto.org"
 #define MQTT_PORT   1883
 
@@ -37,15 +36,8 @@
 #endif
 
 #ifdef ST7735
-  #include "sensores/ST7735/ST7735.h"
-  #define TFT_DC 12
-  #define TFT_CS 13
-  #define TFT_MOSI 14
-  #define TFT_CLK 27
-  #define TFT_RST 0
-  #define TFT_MISO 0
+  #include "sensores\ST7735\st7735.h"
 #endif
-
 
 void onMqttMessage(char* topic,
                    char* payload,
@@ -65,14 +57,18 @@ void onMqttMessage(char* topic,
 
 void setup() {
   Serial.begin(115200);
-#ifdef USE_GSM
-  gsmSetup(APN, GPRS_USER, GPRS_PASS);
-#else
-  wifiSetup(SSID, PASS);
-#endif
+
+
+  #ifdef USE_GSM
+    gsmSetup(APN, GPRS_USER, GPRS_PASS);
+  #else
+    wifiSetup(SSID, PASS);
+  #endif
+
 
   mqttSetup(MQTT_SERVER, MQTT_PORT);
   mqttSetCallback(onMqttMessage);
+
 
   #ifdef SENSOR_SR04
     sr04Begin(TRIG_PIN, ECHO_PIN);
@@ -88,32 +84,35 @@ void setup() {
   #endif
 
   #ifdef ST7735
-  
-  void initDisplay()
-
+    initDisplay();    
   #endif
 }
 
 void loop() {
-#ifdef USE_GSM
-  gsmLoop();
-#else
-  wifiLoop();
-#endif
+
+  #ifdef USE_GSM
+    gsmLoop();
+  #else
+    wifiLoop();
+  #endif
   mqttLoop();
 
+
   static unsigned long lastPub = 0;
-#ifdef USE_GSM
-  if (millis() - lastPub > 10000 && gsmIsConnected()) {
-#else
-  if (millis() - lastPub > 10000 && wifiIsConnected()) {
-#endif
+  #if defined(USE_GSM)
+    bool netOK = gsmIsConnected();
+  #else
+    bool netOK = wifiIsConnected();
+  #endif
+
+  if (millis() - lastPub > 10000 && netOK) {
     lastPub = millis();
     StaticJsonDocument<128> doc;
     doc["temperatura"] = random(0, 40);
     doc["humedad"]     = random(20, 80);
     mqttPublishJson("sensores/data-prueba", doc, 1, false);
   }
+
 
   #ifdef SENSOR_SR04
     float distancia = sr04Read();
@@ -127,17 +126,15 @@ void loop() {
     }
   #endif
 
+
   #ifdef SENSOR_BUZZER
     buzzerUpdate();
   #endif
 
+
   #ifdef ACTUADOR_BOMBA
     static bool subscribed = false;
-#ifdef USE_GSM
-    if (!subscribed && gsmIsConnected()) {
-#else
-    if (!subscribed && wifiIsConnected()) {
-#endif
+    if (!subscribed && netOK) {
       mqttSubscribe("casa/bomba/control", 0);
       subscribed = true;
     }
@@ -146,7 +143,6 @@ void loop() {
 
     static bool lastOn    = bomba_1.isOn();
     static bool lastTimer = bomba_1.isTimerActive();
-
     bool currOn    = bomba_1.isOn();
     bool currTimer = bomba_1.isTimerActive();
 
@@ -156,14 +152,13 @@ void loop() {
       st["estado"] = currOn ? "ON" : "OFF";
       mqttPublishJson("actuador/bomba/estado", st, 1, false);
     }
-
     if (currTimer != lastTimer) {
       Serial.println(currTimer
         ? ">>> MODO TEMPORIZADO ACTIVADO"
         : ">>> MODO MANUAL");
-      StaticJsonDocument<64> st;
-      st["modo"] = currTimer ? "TEMPORIZADO" : "MANUAL";
-      mqttPublishJson("actuador/bomba/estado", st, 1, false);
+      StaticJsonDocument<64> st2;
+      st2["modo"] = currTimer ? "TEMPORIZADO" : "MANUAL";
+      mqttPublishJson("actuador/bomba/estado", st2, 1, false);
     }
 
     lastOn    = currOn;
@@ -171,7 +166,7 @@ void loop() {
   #endif
 
   #ifdef ST7735
-  void handleDisplay();
+    handleDisplay();     
   #endif
 
   delay(200);
