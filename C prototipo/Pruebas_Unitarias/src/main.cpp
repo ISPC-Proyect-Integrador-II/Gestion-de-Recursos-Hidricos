@@ -36,6 +36,16 @@
   bomba bomba_1(BOMBA_PIN, UMBRAL);
 #endif
 
+#ifdef ST7735
+  #include "sensores/ST7735/ST7735.h"
+  #define TFT_DC 12
+  #define TFT_CS 13
+  #define TFT_MOSI 14
+  #define TFT_CLK 27
+  #define TFT_RST 0
+  #define TFT_MISO 0
+#endif
+
 void onMqttMessage(char* topic,
                    char* payload,
                    AsyncMqttClientMessageProperties props,
@@ -74,6 +84,12 @@ void setup() {
   #ifdef ACTUADOR_BOMBA
     bomba_1.iniciar();
     bomba_1.establecer_umbral(UMBRAL);
+  #endif
+
+  #ifdef ST7735
+  
+  void initDisplay()
+
   #endif
 }
 
@@ -151,6 +167,10 @@ void loop() {
 
     lastOn    = currOn;
     lastTimer = currTimer;
+  #endif
+
+  #ifdef ST7735
+  void handleDisplay();
   #endif
 
   delay(200);
