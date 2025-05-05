@@ -1,4 +1,4 @@
-// Incluir las librerías y módulos desarrollados
+
 #include <Arduino.h>
 #include "pantalla.h"
 #include "sensores.h"
@@ -12,20 +12,35 @@
 #include "menu_wifi.h"      // Para selección de red WiFi
 #include "transmisor.h"     // Modo transmisor
 #include "receptor.h"       // Modo receptor
-
+#include "esp_system.h"     // Para leer la MAC desde eFUSE
 
 // Variables globales para el intervalo de lectura
 unsigned long ultimaLectura = 0;
 const unsigned long intervaloLectura = 5000;  // Intervalo de lectura en milisegundos (ej. 5 segundos)
 extern bool pantallaNecesitaActualizacion;  // Declaración global
 
+// ID del dispositivo (6 bytes + formato string)
+uint8_t device_mac[6];
+char deviceId[18];  // "AA:BB:CC:DD:EE:FF" + '\0'
 
 void setup() {
   Serial.begin(9600);
   delay(1000);
   Serial.println("Iniciando sistema hidroponico...");
 
- // declaracion spi
+  // --- Obtener ID desde eFUSE ---
+  if (esp_efuse_mac_get_default(device_mac) == ESP_OK) {
+    sprintf(deviceId,
+            "%02X:%02X:%02X:%02X:%02X:%02X",
+            device_mac[0], device_mac[1], device_mac[2],
+            device_mac[3], device_mac[4], device_mac[5]);
+  } else {
+    strcpy(deviceId, "NO IDENTIFICADO");
+  }
+  Serial.print("ID Dispositivo: ");
+  Serial.println(deviceId);
+
+  // declaracion spi
   SPI.begin(TFT_CLK, TFT_MISO, TFT_MOSI, TFT_CS);
   // bienvenida
   tft.initR(INITR_BLACKTAB);

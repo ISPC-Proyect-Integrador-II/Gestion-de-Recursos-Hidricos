@@ -121,5 +121,12 @@ Esta carpeta contendrá las librerías externas que debes instalar (aunque mucha
 - RTClib  
 - EEPROM (ya incluida en Arduino)  
 
+## 9. **Errores y manejo de informacion**
+
+- **errores.h / errores.cpp** 
+
+En la carpeta se encuetra el catagolo de categoria y mensaje por indexacion de los posibles errores en diferentes funciones del sistema, Y la funcion encargada de la gestion y producccion de los mensajes
+
+Se adjunta documento **errores.md** con el catagolo en formato de lectura para facilitar acceso a los posibles errores contemplados
 ---
 
