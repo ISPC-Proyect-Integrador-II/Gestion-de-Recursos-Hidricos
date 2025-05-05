@@ -21,6 +21,10 @@ extern bool pantallaNecesitaActualizacion;  // Declaración global
 
 
 void setup() {
+  Serial.begin(9600);
+  delay(1000);
+  Serial.println("Iniciando sistema hidroponico...");
+
  // declaracion spi
   SPI.begin(TFT_CLK, TFT_MISO, TFT_MOSI, TFT_CS);
   // bienvenida
@@ -65,19 +69,15 @@ void setup() {
   // **Mantener el logo visible unos segundos**
   delay(5000);
 
-  
+  inicializarDashboard();
 
-
-
-  mostrarMenuPrincipal(); // Mostrar el menú después del mensaje de bienvenida
+  //mostrarMenuPrincipal(); // Mostrar el menú después del mensaje de bienvenida
 
   // Inicializar comunicación serial para depuración
-  Serial.begin(9600);
-  delay(1000);
-  Serial.println("Iniciando sistema hidroponico...");
+  
 
   // Inicialización de la pantalla
-  inicializarPantalla();
+ /// inicializarPantalla();
 
   // Inicialización de sensores
   inicializarSensores();
@@ -113,8 +113,11 @@ void loop() {
   // Actualiza la pantalla y maneja los botones físicos
   //manejarSeleccionMenu();
 
+  inicializarDashboard();
 
-    if (!menuVisible) {  // Si el menú no está activo, volver a mostrarlo
+    inicializarDashboard();
+ /*    
+ if (!menuVisible) {  // Si el menú no está activo, volver a mostrarlo
         mostrarMenuPrincipal();
     }
 
@@ -124,12 +127,12 @@ void loop() {
       mostrarMenuPrincipal();  // Redibuja el menú principal
       pantallaNecesitaActualizacion = false;  // Evita redibujar innecesariamente
   }
-
+/* 
   // Mantiene activa la comunicación MQTT (si está habilitada)
   //if (wifiActivo) manejarMQTT();
 
   // Cada intervaloLectura, se leen los sensores y se ejecuta la lógica de control
-  /*if (millis() - ultimaLectura >= intervaloLectura) {
+ if (millis() - ultimaLectura >= intervaloLectura) {
     // **Solo se leen los sensores activados**
     if (sensorTempAguaActivo) leerTemperaturaAgua();
     if (sensorAireActivo) leerDHT();
@@ -140,7 +143,7 @@ void loop() {
     if (sensorCorrienteActivo) leerCorriente();
     if (sensorPHActivo) leerPH();
 
-    // Se ejecuta la automatización: controla la bomba, la iluminación y verifica alarmas
+    /* // Se ejecuta la automatización: controla la bomba, la iluminación y verifica alarmas
     controlAutomatico();
     verificarAlarmas();
 

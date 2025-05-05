@@ -36,6 +36,8 @@
 #define RED 0xF800         // Rojo para los pétalos
 #define ORANGE 0xFC00      // Naranja para los detalles de la flor
 #define BLUE 0x001F       // Azul para el fondo
+#define GRAY 0x8410  // Un gris neutral basado en RGB
+
 
 extern Adafruit_ST7735 tft;
 
@@ -46,6 +48,7 @@ void mostrarAlertaAgua();
 void manejarBotones();
 void mostrarDatos();
 void mostrarMensaje(String mensaje);
+void inicializarDashboard();
 
 
 

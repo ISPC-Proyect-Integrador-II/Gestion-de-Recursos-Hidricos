@@ -112,3 +112,37 @@ void mostrarDatos() {
 void mostrarMensaje(String mensaje) {
     Serial.println(mensaje);
 }
+
+void dibujarIconos() {
+    tft.fillCircle(15, 30, 5, ST7735_BLUE);    // 🌡️ Termómetro - Temp Agua
+    tft.fillCircle(80, 30, 5, ST7735_ORANGE);  // ☀️ Sol - Temp Ambiente
+    tft.fillCircle(15, 60, 5, ST7735_CYAN);    // 💧 Gota de Agua - Nivel Agua
+    tft.fillCircle(80, 60, 5, ST7735_GREEN);   // 🔄 Grifo - Caudalímetro
+    tft.fillCircle(15, 90, 5, GRAY);  // 🌫️ CO₂ - Medición de gas
+      tft.fillCircle(80, 90, 5, ST7735_YELLOW);  // 💡 Luz - Sensor de luz
+    tft.fillRect(10, 120, 12, 6, ST7735_RED);  // 🔋 Corriente - Medición eléctrica
+    tft.fillCircle(80, 120, 5, ST7735_CYAN);   // ⚗️ pH - Medición química
+}
+
+void mostrarValores() {
+    tft.setCursor(25, 25); tft.print(temperaturaAgua); tft.print(" C");
+    tft.setCursor(90, 25); tft.print(temperaturaAire); tft.print(" C");
+    tft.setCursor(25, 55); tft.print(nivelAgua); tft.print(" cm");
+    tft.setCursor(90, 55); tft.print(flujoAgua); tft.print(" L/min");
+    tft.setCursor(25, 85); tft.print(gas); tft.print(" ppm");
+    tft.setCursor(90, 85); tft.print(luz); tft.print(" lx");
+    tft.setCursor(25, 115); tft.print(corriente); tft.print(" A");
+    tft.setCursor(90, 115); tft.print(phValor); tft.print(" pH");
+}
+// **Actualizar valores en pantalla**
+
+
+void inicializarDashboard() {
+    tft.initR(INITR_BLACKTAB);
+    tft.fillScreen(ST7735_BLACK);
+    tft.setTextColor(ST7735_WHITE);
+    tft.setTextSize(1);
+
+    dibujarIconos();
+    mostrarValores();
+}
