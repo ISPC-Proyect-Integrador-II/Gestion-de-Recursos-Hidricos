@@ -1,6 +1,8 @@
 #include "control.h"
 #include "sensores.h"
 
+#define BUZZER_PIN 33
+
 // Estado del sistema
 bool bomba_activa = false;
 bool luces_activas = false;
@@ -38,8 +40,8 @@ void verificarAlarmas() {
             mensaje_alarma += "Temp aire fuera de rango: " + String(temperaturaAire) + "°C; ";
             alarma_activa = true;
         }
-        if (humedad < MIN_HUMEDAD || humedad > MAX_HUMEDAD) {
-            mensaje_alarma += "Humedad fuera de rango: " + String(humedad) + "%; ";
+        if (humedadAire < MIN_HUMEDAD || humedadAire > MAX_HUMEDAD) {
+            mensaje_alarma += "Humedad fuera de rango: " + String(humedadAire) + "%; ";
             alarma_activa = true;
         }
     }
@@ -75,8 +77,8 @@ void verificarAlarmas() {
     if (!leerPH()) {
         mensaje_alarma += "Error sensor pH; ";
         alarma_activa = true;
-    } else if (phValor < MIN_PH || phValor > MAX_PH) {
-        mensaje_alarma += "pH fuera de rango: " + String(phValor) + "; ";
+    } else if (ph < MIN_PH || ph > MAX_PH) {
+        mensaje_alarma += "pH fuera de rango: " + String(ph) + "; ";
         alarma_activa = true;
     }
 
@@ -119,9 +121,9 @@ void controlAutomatico() {
     }
 
     // **Control del pH**
-    if (phValor < MIN_PH) {
+    if (ph < MIN_PH) {
         Serial.println("Agregar solución alcalina para ajustar pH.");
-    } else if (phValor > MAX_PH) {
+    } else if (ph > MAX_PH) {
         Serial.println("Agregar solución ácida para ajustar pH.");
     }
 
@@ -130,3 +132,9 @@ void controlAutomatico() {
         Serial.println("⚠️ Sistema en alerta: revisión recomendada!");
     }
 }
+
+void inicializarIluminacion() {
+    pinMode(RELE_ILUMINACION_PIN, OUTPUT);
+    digitalWrite(RELE_ILUMINACION_PIN, LOW);
+  }
+  

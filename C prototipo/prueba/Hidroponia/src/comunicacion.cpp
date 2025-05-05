@@ -1,161 +1,95 @@
 #include "comunicacion.h"
-#include "sensores.h"      // Aporta temperaturaAgua, nivelAgua
-#include <ArduinoJson.h>
+#include "sensores.h"
 
-// Flags y clientes
-bool wifiActivo  = true;
-bool loRaActivo  = false;
-bool bleActivo   = false;
-bool forceGsm    = false;
 
-WiFiClient   espClient;
-PubSubClient wifiMqttClient(espClient);
+WiFiClient espClient;
+PubSubClient client(espClient);
 
-TinyGsmClient& gclient = gsmGetClient();
-PubSubClient gsmMqttClient(gclient);
+// Variables de activación/desactivación de comunicación
+bool wifiActivo = true;  // WiFi activado por defecto
+bool loRaActivo = false; // LoRa desactivado por defecto
+bool bleActivo = false;   // BLE Mesh activado por defecto
 
-// ----- Inicialización unificada -----
-void inicializarComunicaciones() {
-  // 1) Wi-Fi: carga credenciales y nada más
-  inicializarWiFi();
 
-  // 2) GSM: arranca el módulo con APN/USER/PASS
-  inicializarGsm(APN, GPRS_USER, GPRS_PASS);
-
-  // 3) LoRa
-  if (loRaActivo) conectarLoRa();
-
-  // 4) BLE Mesh
-  if (bleActivo) conectarBLEMesh();
-}
-
-// ----- Wi-Fi -----  
+// Conexión a WiFi
 void conectarWiFi() {
-  Serial.println("Conectando a WiFi...");
-  if (!conectarWiFi(redSeleccionada, claveWiFi)) {
-    Serial.println("Fallo al conectar con credenciales guardadas");
-  }
-}
-
-// ----- MQTT por Wi-Fi -----  
-void conectarMQTT_WiFi() {
-  wifiMqttClient.setServer(MQTT_BROKER, MQTT_PORT);
-  Serial.println("Conectando MQTT WiFi...");
-  while (!wifiMqttClient.connected()) {
-    if (wifiMqttClient.connect(CLIENT_ID, MQTT_USER, MQTT_PASSWORD)) {
-      Serial.println("MQTT WiFi conectado");
-      wifiMqttClient.subscribe("hidroponia/control");
-    } else {
-      Serial.print("Error MQTT WiFi: ");
-      Serial.println(wifiMqttClient.state());
-      delay(2000);
+    Serial.println("Conectando a WiFi...");
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    int intentos = 0;
+    while (WiFi.status() != WL_CONNECTED && intentos < 20) {
+        delay(500);
+        Serial.print(".");
+        intentos++;
     }
-  }
+    Serial.println(WiFi.status() == WL_CONNECTED ? "\nWiFi conectado" : "\nError WiFi");
 }
 
-// ----- MQTT por GSM -----  
-void conectarGSM_MQTT() {
-  gsmMqttClient.setServer(MQTT_BROKER, MQTT_PORT);
-  Serial.println("Conectando MQTT GSM...");
-  while (!gsmMqttClient.connected()) {
-    // Antes usabas gsmIsConnected(), ahora usamos estadoGsm()
-    if (estadoGsm() && gsmMqttClient.connect(String(CLIENT_ID) + "-GSM", MQTT_USER, MQTT_PASSWORD)) {
-      Serial.println("MQTT GSM conectado");
-      gsmMqttClient.subscribe("hidroponia/control");
-    } else {
-      Serial.print("Error MQTT GSM: ");
-      Serial.println(gsmMqttClient.state());
-      delay(2000);
-    }
-  }
-}
-
-// ----- Función unificada MQTT -----  
+// Conexión a MQTT
 void conectarMQTT() {
-  if (forceGsm) {
-    conectarGSM_MQTT();
-  } else {
-    if (wifiActivo && WiFi.status() == WL_CONNECTED) {
-      conectarMQTT_WiFi();
-    } else if (estadoGsm()) {
-      conectarGSM_MQTT();
+    client.setServer(MQTT_BROKER, MQTT_PORT);
+    Serial.println("Conectando a MQTT...");
+    while (!client.connected()) {
+        if (client.connect(CLIENT_ID, MQTT_USER, MQTT_PASSWORD)) {
+            Serial.println("Conectado a MQTT!");
+            client.subscribe("hidroponia/control");
+        } else {
+            Serial.print("Error MQTT: ");
+            Serial.println(client.state());
+            delay(2000);
+        }
     }
-  }
 }
 
-// ----- Manejo genérico en loop() -----  
-void manejarComunicacion() {
-  // Mantiene viva la conexión GSM
-  gsmLoop();
-
-  // Escucha/controla MQTT
-  conectarMQTT();
-  if (!forceGsm && wifiActivo && wifiMqttClient.connected()) {
-    wifiMqttClient.loop();
-  } else if (gsmMqttClient.connected()) {
-    gsmMqttClient.loop();
-  }
-}
-
-// ----- Envío de datos por MQTT -----  
-void enviarDatosMQTT() {
-  // Formamos JSON
-  StaticJsonDocument<128> doc;
-  doc["tempAgua"]  = temperaturaAgua;
-  doc["nivelAgua"] = nivelAgua;
-  char buf[128];
-  size_t n = serializeJson(doc, buf);
-
-  // Elige canal
-  if (forceGsm || !(wifiActivo && WiFi.status() == WL_CONNECTED)) {
-    if (gsmMqttClient.connected()) {
-      gsmMqttClient.publish("hidroponia/datos", buf, n);
-    }
-  } else {
-    if (wifiMqttClient.connected()) {
-      wifiMqttClient.publish("hidroponia/datos", buf, n);
-    }
-  }
-}
-
-// ----- LoRa y BLE sin cambios -----
+// Conexión a LoRa
 void conectarLoRa() {
-  LoRa.setPins(LORA_CS, LORA_RST, LORA_DIO0);
-  if (!LoRa.begin(LORA_FREQUENCY)) {
-    Serial.println("Error LoRa");
-  } else Serial.println("LoRa OK");
+    LoRa.setPins(LORA_CS, LORA_RST, LORA_DIO0);
+    if (!LoRa.begin(LORA_FREQUENCY)) {
+        Serial.println("Error al iniciar LoRa");
+        return;
+    }
+    Serial.println("LoRa iniciado correctamente.");
 }
 
+// Conexión a BLE Mesh
 void conectarBLEMesh() {
-  BLEDevice::init(CLIENT_ID);
-  Serial.println("BLE Mesh iniciado");
+    BLEDevice::init("ESP32-Hidroponia");
 }
 
+// Manejo de mensajes MQTT
+void manejarMQTT() {
+    if (!client.connected()) conectarMQTT();
+    client.loop();
+}
+
+// Enviar datos por MQTT
+void enviarDatosMQTT() {
+    String datos = "{\"tempAgua\":" + String(temperaturaAgua) + ",\"nivelAgua\":" + String(nivelAgua) + "}";
+    client.publish("hidroponia/datos", datos.c_str());
+}
+
+// Enviar datos por LoRa
 void enviarDatosLoRa() {
-  if (loRaActivo) {
     LoRa.beginPacket();
-    LoRa.print("{\"tempAgua\":"); LoRa.print(temperaturaAgua);
-    LoRa.print(",\"nivelAgua\":"); LoRa.print(nivelAgua);
-    LoRa.print("}");
+    LoRa.print("{\"tempAgua\":" + String(temperaturaAgua) + ",\"nivelAgua\":" + String(nivelAgua) + "}");
     LoRa.endPacket();
-  }
 }
 
+// Recibir datos LoRa
 void recibirDatosLoRa() {
-  int size = LoRa.parsePacket();
-  if (size) {
-    String msg;
-    while (LoRa.available()) msg += (char)LoRa.read();
-    Serial.println("LoRa recv: " + msg);
-  }
+    int packetSize = LoRa.parsePacket();
+    if (packetSize) {
+        String mensaje = "";
+        while (LoRa.available()) mensaje += (char)LoRa.read();
+        Serial.println("Mensaje recibido por LoRa: " + mensaje);
+    }
 }
 
+// Enviar datos por BLE Mesh
 void enviarDatosBLE() {
-  if (bleActivo) {
-    // Lógica BLE Mesh aquí
-  }
+    // Código de transmisión BLE Mesh
 }
 
+// Recibir datos por BLE Mesh
 void recibirDatosBLE() {
-  // Lógica recepción BLE aquí
-}
+    // Código de recepción BLE Mesh
+} 
