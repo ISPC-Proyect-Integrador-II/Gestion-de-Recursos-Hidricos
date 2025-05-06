@@ -1,5 +1,9 @@
 #include "comunicacion/comunicacion.h"
-#include "sensores/sensores.h"      // Aporta temperaturaAgua, nivelAgua
+#include <WiFi.h>                    // WiFi.status(), WiFi.macAddress()
+#include <PubSubClient.h>
+#include "sensores/sensores.h"       // aporta temperaturaAgua, nivelAgua, etc. :contentReference[oaicite:0]{index=0}:contentReference[oaicite:1]{index=1}
+#include "control/control.h"         // aporta bomba_activa, luces_activas, alarma_activa, modo_automatico :contentReference[oaicite:2]{index=2}:contentReference[oaicite:3]{index=3}
+#include "rtc/rtc.h"                 // aporta obtenerHora()
 #include <ArduinoJson.h>
 
 //================================================
@@ -111,24 +115,47 @@ void manejarComunicacion() {
 
 // ----- Envío de datos por MQTT -----  
 void enviarDatosMQTT() {
-  // Formamos JSON
-  StaticJsonDocument<128> doc;
-  doc["tempAgua"]  = temperaturaAgua;
-  doc["nivelAgua"] = nivelAgua;
-  char buf[128];
-  size_t n = serializeJson(doc, buf);
-
-  // Elige canal
+  // 1) Verificar conexión
   if (forceGsm || !(wifiActivo && WiFi.status() == WL_CONNECTED)) {
-    if (gsmMqttClient.connected()) {
-      gsmMqttClient.publish("hidroponia/datos", buf, n);
-    }
+    if (!gsmMqttClient.connected()) return;
+  } else if (!wifiMqttClient.connected()) {
+    return;
+  }
+
+  // 2) Construir JSON
+  DynamicJsonDocument doc(512);
+  doc["deviceId"]  = String(WiFi.macAddress());
+  doc["timestamp"] = obtenerHora();
+
+  JsonObject sensors  = doc.createNestedObject("sensors");
+  sensors["temperaturaAgua"] = temperaturaAgua;
+  sensors["temperaturaAire"] = temperaturaAire;
+  sensors["humedad"]         = humedad;
+  sensors["nivelAgua"]       = nivelAgua;
+  sensors["flujoAgua"]       = flujoAgua;
+  sensors["luz"]             = luz;
+  sensors["gas"]             = gas;
+  sensors["corriente"]       = corriente;
+  sensors["voltaje"]         = voltaje;
+  sensors["potencia"]        = potencia;
+  sensors["phValor"]         = phValor;
+
+  JsonObject controls = doc.createNestedObject("controls");
+  controls["bomba"]          = bomba_activa;
+  controls["luces"]          = luces_activas;
+  controls["alarma"]         = alarma_activa;
+  controls["modoAutomatico"] = modo_automatico;
+
+  // 3) Serializar y publicar
+  char buf[512];
+  size_t len = serializeJson(doc, buf);
+  if (forceGsm || !(wifiActivo && WiFi.status() == WL_CONNECTED)) {
+    gsmMqttClient.publish("hidroponia/datos", buf, len);
   } else {
-    if (wifiMqttClient.connected()) {
-      wifiMqttClient.publish("hidroponia/datos", buf, n);
-    }
+    wifiMqttClient.publish("hidroponia/datos", buf, len);
   }
 }
+
 
 // ----- LoRa y BLE sin cambios -----
 void conectarLoRa() {

@@ -1,4 +1,5 @@
-#include "rtc.h"
+#include "rtc/rtc.h"
+#include <Arduino.h>
 
 RTC_DS1307 rtc;
 DateTime horaActual;

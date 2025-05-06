@@ -13,10 +13,21 @@
 #include "transmisor.h"
 #include "receptor.h"
 
-
+//========================================================
 // Variables para el intervalo de lectura
+//========================================================
+
 unsigned long ultimaLectura = 0;
 const unsigned long intervaloLectura = 5000;
+
+//========================================================
+// Variable para obtener ID del nodo
+//========================================================
+
+
+//========================================================
+// SETUP
+//========================================================
 
 void setup() {
   Serial.begin(115200);
@@ -46,6 +57,10 @@ void setup() {
   Serial.println("Sistema listo.");
 }
 
+//========================================================
+// LLOP
+//========================================================
+
 void loop() {
   mostrarMenuPrincipal();
   manejarSeleccionMenu();
@@ -68,11 +83,11 @@ void loop() {
     controlAutomatico();
     verificarAlarmas();
 
-    // Si es transmisor, envía datos por el canal seleccionado
-    if (esNodoTransmisor) enviarDatosMQTT();
-
     Serial.println("Hora actual: " + obtenerHora());
     ultimaLectura = millis();
+
+    // Si es transmisor, envía datos por el canal seleccionado
+    if (esNodoTransmisor) enviarDatosMQTT();
   }
 
   // LoRa en background
