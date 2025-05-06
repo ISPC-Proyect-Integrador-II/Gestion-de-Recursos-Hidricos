@@ -20,7 +20,7 @@ static bool        _connected   = false;
 static unsigned long _lastTry   = 0;
 static const unsigned long RETRY_MS = 10000;
 
-void inicializarrGsm(const char* apn, const char* user, const char* pass) {
+void inicializarGsm(const char* apn, const char* user, const char* pass) {
 
 
   _apn  = apn; 
