@@ -5,6 +5,9 @@
 
 // Opciones del menú
 int opcionMenu = 0;
+bool pantallaNecesitaActualizacion = true;  // Inicialización global
+bool menuVisible = false;  // Definición única de la variable global
+
 
 void mostrarMenuPrincipal() {
     tft.fillScreen(ST7735_BLACK);
@@ -22,18 +25,23 @@ void mostrarMenuPrincipal() {
     tft.println(opcionMenu == 7 ? "> Activar/Desactivar Sensor de pH" : "  Activar/Desactivar Sensor de pH");
     tft.println(opcionMenu == 8 ? "> Activar/Desactivar Sensor de Flujo de Agua" : "  Activar/Desactivar Sensor de Flujo de Agua");
     tft.println(opcionMenu == 9 ? "> Activar/Desactivar Sensor de Temperatura del Agua" : "  Activar/Desactivar Sensor de Temperatura del Agua");
+    menuVisible = true;  // Indicar que el menú está en pantalla
+
 }
 
+/*
 void manejarSeleccionMenu() {
     if (digitalRead(BOTON_IZQUIERDA) == LOW) {
         opcionMenu = max(0, opcionMenu - 1);
+        pantallaNecesitaActualizacion = true;
         delay(200);
     }
     if (digitalRead(BOTON_DERECHA) == LOW) {
         opcionMenu = min(9, opcionMenu + 1);
+        pantallaNecesitaActualizacion = true;
         delay(200);
     }
-    
+
     if (digitalRead(BOTON_CONFIRMAR) == LOW) {
         Serial.println("Opción seleccionada: " + String(opcionMenu));
 
@@ -69,6 +77,11 @@ void manejarSeleccionMenu() {
                 mostrarMensaje("Sensor Temp Agua " + String(sensorTempAguaActivo ? "Activado" : "Desactivado"));
                 break;
         }
+        
+        pantallaNecesitaActualizacion = true;  // Indica que hay que actualizar la pantalla
+        menuVisible = true;
         delay(500);
     }
+
 }
+*/

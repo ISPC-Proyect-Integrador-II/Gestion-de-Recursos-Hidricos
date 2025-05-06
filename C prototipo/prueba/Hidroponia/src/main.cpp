@@ -1,3 +1,4 @@
+// Incluir las librerías y módulos desarrollados
 #include <Arduino.h>
 #include "pantalla.h"
 #include "sensores.h"
@@ -6,76 +7,119 @@
 #include "wifi_manager.h"
 #include "rtc.h"
 #include "recetas.h"
-#include "menu.h"
-#include "menu_recetas.h"
-#include "menu_wifi.h"
-#include "transmisor.h"
-#include "receptor.h"
-#include "gsm_async.h"
+#include "menu.h"           // Menú principal, si es necesario
+#include "menu_recetas.h"   // Para seleccionar recetas de cultivo
+#include "menu_wifi.h"      // Para selección de red WiFi
+#include "transmisor.h"     // Modo transmisor
+#include "receptor.h"       // Modo receptor
 
-// Variables para el intervalo de lectura
+
+// Variables globales para el intervalo de lectura
 unsigned long ultimaLectura = 0;
-const unsigned long intervaloLectura = 5000;
+const unsigned long intervaloLectura = 5000;  // Intervalo de lectura en milisegundos (ej. 5 segundos)
+extern bool pantallaNecesitaActualizacion;  // Declaración global
+
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
   delay(1000);
   Serial.println("Iniciando sistema hidroponico...");
 
-  inicializarPantalla();
-  inicializarSensores();
-  inicializarControl();
+ // declaracion spi
+  SPI.begin(TFT_CLK, TFT_MISO, TFT_MOSI, TFT_CS);
+  // bienvenida
+  tft.initR(INITR_BLACKTAB);
+  tft.fillScreen(ST7735_BLACK);
+  tft.setTextColor(ST7735_WHITE);
+  tft.setTextSize(1);
 
-  // 1) Ejecutamos la inicialización unificada de canales:
-  inicializarComunicaciones();
+  // **Dibujar suelo más abajo**
+  tft.fillRect(0, 150, 128, 10, BROWN);
 
-  // 2) Si Wi-Fi está activo, intentamos conectar
-  if (wifiActivo) {
-    conectarWiFi();
-    conectarMQTT_WiFi();    // Conecta MQTT sólo por Wi-Fi al inicio
+  // **Animación de crecimiento de la planta más ancha**
+  for (int altura = 5; altura <= 80; altura += 3) {
+      tft.fillRect(55, 140 - altura, 18, altura, DARK_GREEN); // Tallo base más ancho
+      tft.fillRect(55, 140 - altura, 18, altura - 4, LIGHT_GREEN); // Resalte del tallo
+
+      // **Hojas ovaladas simuladas con círculos y rectángulo**
+      if (altura > 15) {
+          tft.fillCircle(45, 140 - altura, 10, LIGHT_GREEN); // Lado izquierdo
+          tft.fillCircle(75, 140 - altura, 10, LIGHT_GREEN); // Lado derecho
+          tft.fillRect(45, 140 - altura - 5, 30, 10, LIGHT_GREEN); // Centro de la hoja
+      }
+      if (altura > 30) {
+          tft.fillCircle(40, 140 - altura - 10, 12, DARK_GREEN);
+          tft.fillCircle(80, 140 - altura - 10, 12, DARK_GREEN);
+          tft.fillRect(40, 140 - altura - 15, 40, 12, DARK_GREEN);
+      }
+      if (altura > 50) {
+          tft.fillCircle(55, 140 - altura - 15, 14, LIGHT_GREEN);
+          tft.fillCircle(73, 140 - altura - 15, 14, LIGHT_GREEN);
+          tft.fillRect(55, 140 - altura - 20, 18, 14, LIGHT_GREEN);
+      }
+
+      delay(250);
   }
 
-  // 3) Transmisor/Receptor, RTC y Recetas como antes
-  inicializarRTC();
-  cargarRecetas();
-  mostrarRecetaActual();
-  inicializarTransmisor();
-  inicializarReceptor();
+  // **Flor más grande en la cima**
+  tft.fillCircle(64, 40, 8, RED);      // Pétalos
+  tft.fillCircle(64, 40, 6, ORANGE);   // Detalle intermedio
+  tft.fillCircle(64, 40, 4, YELLOW);   // Centro de la flor
 
+  // **Mantener el logo visible unos segundos**
+  delay(5000);
+  inicializarDashboard();
+ 
+  
+  inicializarSensores();
+
+  leerDHT();
+  leerLuz();
+  leerGas();
+
+  
   Serial.println("Sistema listo.");
 }
 
 void loop() {
-  mostrarMenuPrincipal();
-  manejarSeleccionMenu();
-  actualizarPantalla();
+  
+   // Verificar el botón para mostrar/ocultar menú
+   if (digitalRead(BOTON_CONFIRMAR) == HIGH) {  // Si el botón se presiona
+    delay(200);  // Pequeño debounce para evitar detección errónea
+    menuVisible = !menuVisible; // Cambiar entre menú y dashboard
 
-  // Mantiene vivas las comunicaciones y procesa MQTT
-  manejarComunicacion();
-
-  // Cada X ms: lee sensores activos, controla y envía
-  if (millis() - ultimaLectura >= intervaloLectura) {
-    if (sensorTempAguaActivo)  leerTemperaturaAgua();
-    if (sensorAireActivo)      leerDHT();
-    if (sensorNivelAguaActivo) leerNivelAgua();
-    if (sensorFlujoActivo)     calcularFlujoAgua();
-    if (sensorLuzActivo)       leerLuz();
-    if (sensorGasActivo)       leerGas();
-    if (sensorCorrienteActivo) leerCorriente();
-    if (sensorPHActivo)        leerPH();
-
-    controlAutomatico();
-    verificarAlarmas();
-
-    // Si es transmisor, envía datos por el canal seleccionado
-    if (esNodoTransmisor) enviarDatosMQTT();
-
-    Serial.println("Hora actual: " + obtenerHora());
-    ultimaLectura = millis();
+    if (menuVisible) {
+        mostrarMenuPrincipal();  // Mostrar el menú principal
+    } else {
+        actualizarDashboard();  // Volver al dashboard
+    }
   }
 
-  // LoRa en background
-  if (loRaActivo) recibirDatosLoRa();
+  // Verificar si es momento de leer los sensores (cada intervaloLectura ms)
+  if (millis() - ultimaLectura >= intervaloLectura) {
+    ultimaLectura = millis();  //  Actualizamos el tiempo de la última lectura
+    
+    Serial.println("===== ACTUALIZANDO SENSORES =====");
 
+    //  Solo se leen los sensores activados
+    if (sensorTempAguaActivo) leerTemperaturaAgua();
+    if (sensorAireActivo) leerDHT();
+    if (sensorNivelAguaActivo) leerNivelAgua();
+    if (sensorFlujoActivo) calcularFlujoAgua();
+    if (sensorLuzActivo) leerLuz();
+    if (sensorGasActivo) leerGas();
+    if (sensorCorrienteActivo) leerCorriente();
+    if (sensorPHActivo) leerPH();
+    
+    // IMPORTANTE: Actualizar la pantalla después de leer los sensores
+    if (!menuVisible) {
+      actualizarDashboard();
+    }
+    
+    Serial.println("===== SENSORES ACTUALIZADOS =====");
+  }
+  
+  // Pequeña pausa para estabilidad
   delay(10);
+
 }

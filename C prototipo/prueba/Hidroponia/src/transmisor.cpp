@@ -14,7 +14,7 @@ void enviarDatos() {
     // Se genera un mensaje JSON con algunos datos relevantes.
     // Puedes ampliar el JSON para incluir todos los parámetros que necesites.
     String datos = "{\"tempAgua\":" + String(temperaturaAgua) +
-                   ",\"ph\":" + String(phValor) +
+                   ",\"ph\":" + String(ph) +
                    ",\"nivelAgua\":" + String(nivelAgua) + "}";
     
     // Publica los datos en el tópico configurado para recibir información hidropónica

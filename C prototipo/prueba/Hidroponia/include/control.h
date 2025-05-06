@@ -1,9 +1,14 @@
 #ifndef CONTROL_H
 #define CONTROL_H
-extern void activarIluminacion(bool estado);
+
 
 #include "sensores.h"
 #include "comunicacion.h"
+
+#define BOMBA_PIN 26
+#define LUCES_PIN 43
+#define BUZZER_PIN 46
+#define RELE_ILUMINACION_PIN 44 // Mantener el mismo pin que en iluminacion.h
 
 // Definiciones de seguridad y límites
 #define MIN_TEMP_AGUA 18.0
@@ -26,6 +31,7 @@ extern bool bomba_activa;
 extern bool luces_activas;
 extern bool alarma_activa;
 extern bool modo_automatico;
+extern void activarIluminacion(bool estado);
 
 // Inicialización del control
 void inicializarControl();
