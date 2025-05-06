@@ -1,4 +1,4 @@
-#include "recetas.h"
+#include "recetas/recetas.h"
 
 Receta recetas[MAX_RECETAS] = {
     {"Lechuga", 20.0, 22.0, 70.0, 10.0, 6.2, true},

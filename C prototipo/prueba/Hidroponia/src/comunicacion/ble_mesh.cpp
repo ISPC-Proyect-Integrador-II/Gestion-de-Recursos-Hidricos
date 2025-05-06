@@ -1,4 +1,4 @@
-#include "ble_mesh.h"
+#include "comunicacion/ble_mesh.h"
 #include <Arduino.h>
 
 bool esNodoBLEMaestro = false;

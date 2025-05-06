@@ -1,8 +1,8 @@
 #ifndef TRANSMISOR_H
 #define TRANSMISOR_H
 
-#include "sensores.h"
-#include "comunicacion.h"
+#include "sensores/sensores.h"
+#include "comunicacion/comunicacion.h"
 
 extern bool esNodoTransmisor; // Variable para indicar si este nodo es transmisor
 

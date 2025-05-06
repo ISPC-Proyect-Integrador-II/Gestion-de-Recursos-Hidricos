@@ -1,7 +1,7 @@
 #ifndef RECEPTOR_H
 #define RECEPTOR_H
 
-#include "control.h"
+#include "control/control.h"
 
 extern bool esNodoReceptor; // Variable para indicar si este nodo es receptor
 

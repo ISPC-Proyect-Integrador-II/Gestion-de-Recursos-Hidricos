@@ -1,6 +1,6 @@
-#include "ph_sensor.h"
+#include "sensores/ph_sensor.h"
 #include <Arduino.h>
-#include "sensores.h"
+#include "sensores/sensores.h"
 
 
 void inicializarSensorPH() {

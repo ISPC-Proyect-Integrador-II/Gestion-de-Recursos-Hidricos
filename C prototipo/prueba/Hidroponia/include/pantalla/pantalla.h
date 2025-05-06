@@ -23,7 +23,7 @@
 
 extern Adafruit_ST7735 tft;
 
-void inicializarPantalla();
+bool inicializarPantalla();
 void actualizarPantalla();
 void mostrarStandby();
 void mostrarAlertaAgua();

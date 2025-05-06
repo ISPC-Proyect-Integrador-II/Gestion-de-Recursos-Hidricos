@@ -1,4 +1,4 @@
-#include "lora_mesh.h"
+#include "comunicacion/lora_mesh.h"
 #include <Arduino.h>
 
 bool esNodoLoRaMaestro = false;

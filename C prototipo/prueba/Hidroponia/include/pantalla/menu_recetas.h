@@ -2,7 +2,7 @@
 #define MENU_RECETAS_H
 
 #include "pantalla.h"
-#include "recetas.h"
+#include "recetas/recetas.h"
 
 void mostrarMenuRecetas();
 void manejarSeleccionReceta();

@@ -1,8 +1,10 @@
-#include "comunicacion.h"
-#include "sensores.h"      // Aporta temperaturaAgua, nivelAgua
+#include "comunicacion/comunicacion.h"
+#include "sensores/sensores.h"      // Aporta temperaturaAgua, nivelAgua
 #include <ArduinoJson.h>
 
-// Flags y clientes
+//================================================
+// FLAGS Y CLIENTES
+// ===============================================
 bool wifiActivo  = true;
 bool loRaActivo  = false;
 bool bleActivo   = false;
@@ -14,7 +16,9 @@ PubSubClient wifiMqttClient(espClient);
 TinyGsmClient& gclient = gsmGetClient();
 PubSubClient gsmMqttClient(gclient);
 
-// ----- Inicialización unificada -----
+//================================================
+// INICIALIZACIÓN DE COMUNICACIONES
+// ===============================================
 void inicializarComunicaciones() {
   // 1) Wi-Fi: carga credenciales y nada más
   inicializarWiFi();
@@ -29,7 +33,9 @@ void inicializarComunicaciones() {
   if (bleActivo) conectarBLEMesh();
 }
 
-// ----- Wi-Fi -----  
+//================================================
+// CONECTAR A REDES Y MQTT
+// =============================================== 
 void conectarWiFi() {
   Serial.println("Conectando a WiFi...");
   if (!conectarWiFi(redSeleccionada, claveWiFi)) {
@@ -57,9 +63,13 @@ void conectarMQTT_WiFi() {
 void conectarGSM_MQTT() {
   gsmMqttClient.setServer(MQTT_BROKER, MQTT_PORT);
   Serial.println("Conectando MQTT GSM...");
+
+  // Generamos un clientId temporal en RAM y lo convertimos a const char*
+  String clientIdGsm = String(CLIENT_ID) + "-GSM";
+  const char* clientIdCStr = clientIdGsm.c_str();
+
   while (!gsmMqttClient.connected()) {
-    // Antes usabas gsmIsConnected(), ahora usamos estadoGsm()
-    if (estadoGsm() && gsmMqttClient.connect(String(CLIENT_ID) + "-GSM", MQTT_USER, MQTT_PASSWORD)) {
+    if (estadoGsm() && gsmMqttClient.connect(clientIdCStr, MQTT_USER, MQTT_PASSWORD)) {
       Serial.println("MQTT GSM conectado");
       gsmMqttClient.subscribe("hidroponia/control");
     } else {
@@ -83,7 +93,9 @@ void conectarMQTT() {
   }
 }
 
-// ----- Manejo genérico en loop() -----  
+//================================================
+// CICLO DE COMUNICACIÓN
+// ===============================================
 void manejarComunicacion() {
   // Mantiene viva la conexión GSM
   gsmLoop();

@@ -1,4 +1,4 @@
-#include "sensores.h"
+#include "sensores/sensores.h"
 
 // Objetos para sensores
 DHT dht(DHT_PIN, DHT_TYPE);

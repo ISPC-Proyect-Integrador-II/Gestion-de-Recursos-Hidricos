@@ -1,4 +1,4 @@
-#include "menu_recetas.h"
+#include "pantalla/menu_recetas.h"
 
 int opcionReceta = 0;
 

@@ -1,4 +1,4 @@
-#include "iluminacion.h"
+#include "control/iluminacion.h"
 #include <Arduino.h>
 
 void inicializarIluminacion() {

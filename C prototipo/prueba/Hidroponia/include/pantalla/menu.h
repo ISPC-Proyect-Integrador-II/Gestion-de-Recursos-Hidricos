@@ -2,8 +2,8 @@
 #define MENU_H
 
 #include "pantalla.h"
-#include "comunicacion.h"
-#include "sensores.h"
+#include "comunicacion/comunicacion.h"
+#include "sensores/sensores.h"
 
 // Funciones para mostrar y procesar la navegación del menú general
 void mostrarMenuPrincipal();

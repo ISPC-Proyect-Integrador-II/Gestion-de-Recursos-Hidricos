@@ -1,6 +1,6 @@
-#include "menu.h"
+#include "pantalla/menu.h"
 #include <Arduino.h>
-#include "pantalla.h"
+#include "pantalla/pantalla.h"
 
 
 // Opciones del menú

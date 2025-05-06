@@ -1,17 +1,18 @@
 #include <Arduino.h>
-#include "pantalla.h"
-#include "sensores.h"
-#include "control.h"
-#include "comunicacion.h"
-#include "wifi_manager.h"
-#include "rtc.h"
-#include "recetas.h"
-#include "menu.h"
-#include "menu_recetas.h"
-#include "menu_wifi.h"
+#include "pantalla/pantalla.h"
+#include "pantalla/menu.h"
+#include "pantalla/menu_recetas.h"
+#include "pantalla/menu_wifi.h"
+#include "sensores/sensores.h"
+#include "control/control.h"
+#include "comunicacion/comunicacion.h"
+#include "comunicacion/wifi_manager.h"
+#include "comunicacion/gsm_async.h"
+#include "rtc/rtc.h"
+#include "recetas/recetas.h"
 #include "transmisor.h"
 #include "receptor.h"
-#include "gsm_async.h"
+
 
 // Variables para el intervalo de lectura
 unsigned long ultimaLectura = 0;

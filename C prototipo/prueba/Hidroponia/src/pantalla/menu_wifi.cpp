@@ -1,4 +1,4 @@
-#include "menu_wifi.h"
+#include "pantalla/menu_wifi.h"
 
 int redSeleccionadaIndex = 0;
 int numRedes = 0;

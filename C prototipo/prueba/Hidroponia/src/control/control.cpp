@@ -1,5 +1,5 @@
-#include "control.h"
-#include "sensores.h"
+#include "control/control.h"
+#include "sensores/sensores.h"
 
 // Estado del sistema
 bool bomba_activa = false;
@@ -81,8 +81,13 @@ void verificarAlarmas() {
     }
 
     // Notificación de alarmas
-    if (alarma_activa && client.connected()) {
-        client.publish("hidroponia/alarmas", mensaje_alarma.c_str());
+    if (alarma_activa && wifiActivo
+        && WiFi.status() == WL_CONNECTED
+        && wifiMqttClient.connected()) {
+      wifiMqttClient.publish("hidroponia/alarmas", mensaje_alarma.c_str());
+    }
+    else if (gsmMqttClient.connected()) {
+        gsmMqttClient.publish("hidroponia/alarmas", mensaje_alarma.c_str());
     }
 }
 

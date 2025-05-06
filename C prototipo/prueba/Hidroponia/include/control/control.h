@@ -2,8 +2,8 @@
 #define CONTROL_H
 extern void activarIluminacion(bool estado);
 
-#include "sensores.h"
-#include "comunicacion.h"
+#include "sensores/sensores.h"
+#include "comunicacion/comunicacion.h"
 
 // Definiciones de seguridad y límites
 #define MIN_TEMP_AGUA 18.0

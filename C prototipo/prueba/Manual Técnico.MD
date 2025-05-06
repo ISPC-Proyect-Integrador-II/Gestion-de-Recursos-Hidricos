@@ -12,6 +12,7 @@ Hidroponia/
 ├── Configuración.h              # Configuración general
 ├── Configuración_avanzada.h     # Configuración avanzada
 ├── src/
+│   ├── errores/                 # Gestion de errores y catalogo de alarmas
 │   ├── sensores/                # Módulos de sensores (pH, temperatura, nivel de agua, flujo)
 │   ├── control/                 # Control automático de riego e iluminación
 │   ├── pantalla/                # Interfaz de pantalla TFT y menús

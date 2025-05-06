@@ -1,4 +1,4 @@
-#include "wifi_manager.h"
+#include "comunicacion/wifi_manager.h"
 
 char redSeleccionada[MAX_SSID_LENGTH] = "";
 char claveWiFi[MAX_PASS_LENGTH] = "";

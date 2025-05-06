@@ -1,6 +1,11 @@
 #pragma once
-
+#include <Arduino.h>
+#include <pgmspace.h>
 #include <stdint.h>
+
+//================================================
+// STATE MACHINE
+//================================================
 
 // Nivel de severidad
 enum class LogLevel : uint8_t {
@@ -10,6 +15,8 @@ enum class LogLevel : uint8_t {
 // Códigos de error de tu sistema
 enum class ErrorCode : uint16_t {
   NONE                = 0,
+
+ 
 //================================================
 // Errores de conectividad
 //================================================
@@ -119,11 +126,29 @@ enum class ErrorCode : uint16_t {
 
 };
 
+
+//================================================
+// MACRO PARA GESTIOON DE ERRORES
+//================================================
+
+inline const char* getErrorMessage(ErrorCode code);
+void registrarError(ErrorCode code);
+
+// Macro genérica para chequear una expresión y, si es falsa, registrar el error y salir
+#define CHECK(expr, code)              \
+  do {                                 \
+    if (!(expr)) {                     \
+      registrarError(code);            \
+      return false;                    \
+    }                                  \
+  } while (0)
+
+
 //================================================
 // Mapear código → índice en el array de strings
 //================================================
 
-static constexpr const char* const _errMsgs[] PROGMEM = {
+static const char* const _errMsgs[] = {
   /*  0 */ "OK",
   // — Errores de conectividad WiFi
   /*  1 */ "Error al inicializar WiFi",

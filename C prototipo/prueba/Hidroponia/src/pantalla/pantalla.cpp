@@ -1,5 +1,6 @@
-#include "pantalla.h"
-#include "sensores.h"
+#include "pantalla/pantalla.h"
+#include "sensores/sensores.h"
+#include "errores/errores.h"
 
 // Objeto para la pantalla
 Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_MOSI, TFT_SCLK, TFT_RST);
@@ -14,8 +15,9 @@ bool modoStandby = false;
 bool alertaAgua = false;
 
 // Inicialización de la pantalla
-void inicializarPantalla() {
+bool inicializarPantalla() {
     tft.initR(INITR_BLACKTAB);
+    CHECK(tft.width() > 0, ErrorCode::DISPLAY_INIT_FAIL); // Verifica que la pantalla se haya inicializado correctamente
     tft.fillScreen(ST7735_BLACK);
     tft.setTextColor(ST7735_WHITE);
     tft.setTextSize(1);
@@ -23,6 +25,8 @@ void inicializarPantalla() {
     pinMode(BOTON_IZQUIERDA, INPUT_PULLUP);
     pinMode(BOTON_DERECHA, INPUT_PULLUP);
     pinMode(BOTON_CONFIRMAR, INPUT_PULLUP);
+
+    return true;
 }
 
 // Actualización de pantalla
