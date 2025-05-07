@@ -12,15 +12,16 @@ enum class LogLevel : uint8_t {
   DEBUG, INFO, WARN, ERROR
 };
 
+
+//================================================
+// Errores de conectividad (CLASE)
+//================================================
+
 // Códigos de error de tu sistema
 enum class ErrorCode : uint16_t {
   NONE                = 0,
 
- 
-//================================================
-// Errores de conectividad
-//================================================
-  WIFI_INIT_FAIL            = 1,        // error en inicializarWiFi();
+   WIFI_INIT_FAIL            = 1,        // error en inicializarWiFi();
   WIFI_AVAILABLE_NW_FAIL    = 2,        // error en escanearRedes()
   WIFI_CONNECT_FAIL         = 3,        // error en conectarWiFi()
   WIFI_CRED_SAVE_FAIL       = 4,        // error en guardarCredenciales
@@ -135,11 +136,11 @@ inline const char* getErrorMessage(ErrorCode code);
 void registrarError(ErrorCode code);
 
 // Macro genérica para chequear una expresión y, si es falsa, registrar el error y salir
-#define CHECK(expr, code)              \
+#define CHECK_RET(expr, code)              \
   do {                                 \
     if (!(expr)) {                     \
       registrarError(code);            \
-      return false;                    \
+      return ErrorCode::code;                    \
     }                                  \
   } while (0)
 
