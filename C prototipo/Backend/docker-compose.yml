@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    container_name: hidroponia_device_api
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "${API_PORT}:${API_PORT}"
+    # network bridge por defecto
+    networks:
+      - hidroponia_network
