@@ -5,12 +5,7 @@
 #include <Adafruit_ST7735.h>
 #include <SPI.h>
 
-// Definiciones de pines para TFT
-//#define TFT_CS     5
-//#define TFT_RST    4
-//#define TFT_DC     2
-//#define TFT_MOSI   23
-//#define TFT_SCLK   18
+
 
 #define TFT_DC 12    // A0
 #define TFT_CS 13    // CS
@@ -21,8 +16,8 @@
 
 
 // Definiciones para botones de navegación
-#define BOTON_IZQUIERDA 32
-#define BOTON_DERECHA   33
+#define BOTON_IZQUIERDA 42
+#define BOTON_DERECHA   41
 #define BOTON_CONFIRMAR 4
 
 // Definiciones de animaciones

@@ -17,14 +17,21 @@ void inicializarRTC() {
 }
 
 // Obtener hora actual
+
+
 String obtenerHora() {
-    horaActual = rtc.now();
-    return String(horaActual.year()) + "-" + 
-           String(horaActual.month()) + "-" + 
-           String(horaActual.day()) + " " + 
-           String(horaActual.hour()) + ":" + 
-           String(horaActual.minute());
+    DateTime horaActual = rtc.now();
+    String hora = String(horaActual.year()) + "-" + 
+                  String(horaActual.month()) + "-" + 
+                  String(horaActual.day()) + " " + 
+                  String(horaActual.hour()) + ":" + 
+                  String(horaActual.minute()) + ":" + 
+                  String(horaActual.second());
+
+    Serial.println("Hora actual: " + hora);  // Imprimir en el monitor serial
+    return hora;
 }
+
 
 // Sincronizar hora desde MQTT
 void sincronizarHora(String nuevaHora) {

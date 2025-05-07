@@ -13,7 +13,7 @@
 // Definiciones de seguridad y límites
 #define MIN_TEMP_AGUA 18.0
 #define MAX_TEMP_AGUA 28.0
-#define MIN_TEMP_AIRE 15.0
+#define MIN_TEMP_AIRE 15.0      
 #define MAX_TEMP_AIRE 35.0
 #define MIN_HUMEDAD 40.0
 #define MAX_HUMEDAD 80.0

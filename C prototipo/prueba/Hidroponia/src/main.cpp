@@ -72,7 +72,8 @@ void setup() {
  
   
   inicializarSensores();
-
+  inicializarRTC();
+  iniciarEEPROM();
   leerDHT();
   leerLuz();
   leerGas();
@@ -110,6 +111,7 @@ void loop() {
     if (sensorGasActivo) leerGas();
     if (sensorCorrienteActivo) leerCorriente();
     if (sensorPHActivo) leerPH();
+    obtenerHora();
     
     // IMPORTANTE: Actualizar la pantalla después de leer los sensores
     if (!menuVisible) {

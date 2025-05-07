@@ -9,6 +9,18 @@ Receta recetas[MAX_RECETAS] = {
 };
 int recetaSeleccionada = 0;
 
+void iniciarEEPROM() {
+    Serial.println("Inicializando EEPROM...");
+    
+    // Iniciar EEPROM con un tamaño de 512 bytes
+    if (EEPROM.begin(512)) {
+        Serial.println("EEPROM iniciada correctamente ");
+    } else {
+        Serial.println("Error al iniciar EEPROM ");
+    }
+}
+
+
 // Cargar recetas desde EEPROM
 void cargarRecetas() {
     EEPROM.begin(512);

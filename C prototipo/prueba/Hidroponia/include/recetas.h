@@ -25,5 +25,6 @@ void cargarRecetas();
 void guardarRecetas();
 void seleccionarReceta(int indice);
 void mostrarRecetaActual();
+void iniciarEEPROM(); // Inicializa la EEPROM al inicio del programa
 
 #endif 

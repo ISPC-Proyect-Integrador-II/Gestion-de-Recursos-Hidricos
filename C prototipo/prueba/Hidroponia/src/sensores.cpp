@@ -1,4 +1,5 @@
 #include "sensores.h"
+#include "expansion.h"
 
 // Objetos para sensores
 DHTesp dhtSensor;  // Cambiado a DHTesp por compatibilidad con DHTesp.h
@@ -46,7 +47,11 @@ void inicializarSensores() {
         attachInterrupt(digitalPinToInterrupt(FLOW_SENSOR_PIN), contadorPulsos, FALLING);
     }
     
-    Serial.println("Sensores inicializados correctamente");
+    // Inicialización del sensor ultrasónico
+    pinMode(ULTRASONIC_TRIG_PIN, OUTPUT);
+    pinMode(ULTRASONIC_ECHO_PIN, INPUT);
+    
+    expansion_init();
 }
 
 // Función para la interrupción del sensor de flujo
@@ -94,7 +99,7 @@ bool leerNivelAgua() {
     if (!sensorNivelAguaActivo) return false;
 
     long duration;
-    
+
     // Disparar la señal ultrasónica
     digitalWrite(ULTRASONIC_TRIG_PIN, LOW);
     delayMicroseconds(2);
@@ -102,16 +107,16 @@ bool leerNivelAgua() {
     delayMicroseconds(10);
     digitalWrite(ULTRASONIC_TRIG_PIN, LOW);
 
-    // Recibir el eco
-    duration = pulseIn(ULTRASONIC_ECHO_PIN, HIGH);
+    // Recibir el eco con timeout para evitar bloqueos
+    duration = pulseIn(ULTRASONIC_ECHO_PIN, HIGH, 100000);
 
     // Si no se recibe un eco válido, mostrar error
     if (duration == 0) {
-        Serial.println("Error: No se recibió el eco del sensor de nivel.");
+        Serial.println("⚠️ Error: No se recibió el eco del sensor de nivel.");
         return false;
     } else {
         nivelAgua = duration * 0.034 / 2;  // Convertir tiempo en distancia (cm)
-        Serial.print("Nivel de agua: ");
+        Serial.print("📏 Nivel de agua: ");
         Serial.print(nivelAgua);
         Serial.println(" cm");
         return true;

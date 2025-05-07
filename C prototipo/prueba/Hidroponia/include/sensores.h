@@ -7,16 +7,16 @@
 #include <DHTesp.h>
 #include <OneWire.h>
 // #include <Adafruit_INA219.h>
-#include <adafruit_ina219_mock.h>
+#include <Adafruit_INA219.h>
 
 // Definiciones de pines para sensores
 #define DHT_PIN 33
 #define DHT_TYPE DHT11
 #define DS18B20_PIN 35
 #define FLOW_SENSOR_PIN 34
-#define LDR_PIN 39
+#define LDR_PIN 4
 #define GAS_SENSOR_PIN 36
-#define ULTRASONIC_TRIG_PIN 12
+#define ULTRASONIC_TRIG_PIN 16
 #define ULTRASONIC_ECHO_PIN 32
 #define PH_SENSOR_PIN 2
 
