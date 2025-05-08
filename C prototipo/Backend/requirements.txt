@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+paho-mqtt
+mysql-connector-python
+influxdb-client
+python-dotenv
+sqlalchemy
