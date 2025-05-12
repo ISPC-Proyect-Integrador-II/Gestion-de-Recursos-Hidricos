@@ -4,12 +4,18 @@ services:
 
   mysql:
     image: mysql:8.0
-    container_name: mysql
+    container_name: mysql_hidroponia
     env_file: .env
     environment:
       # Evitar que root quede sólo en localhost
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_ROOT_HOST: ${MYSQL_ROOT_HOST}
+  ports:
+  - "3306:3306"
+  healthcheck:
+    test: ["CMD", "mysqladmin" ,"ping","-h","localhost"]
+    interval: 10s
+    retries: 5
     volumes:
       - mysql_data:/var/lib/mysql
       - ./mysql:/docker-entrypoint-initdb.d
@@ -19,7 +25,7 @@ services:
 
   influxdb:
     image: influxdb:2.7
-    container_name: influxdb
+    container_name: influx_sensor_data
     env_file: .env
     environment:
       DOCKER_INFLUXDB_INIT_MODE:        ${DOCKER_INFLUXDB_INIT_MODE}
@@ -29,17 +35,27 @@ services:
       DOCKER_INFLUXDB_INIT_BUCKET:      ${DOCKER_INFLUXDB_INIT_BUCKET}
       DOCKER_INFLUXDB_INIT_RETENTION:   ${DOCKER_INFLUXDB_INIT_RETENTION}
       DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${DOCKER_INFLUXDB_INIT_ADMIN_TOKEN}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://influx_sensor_data:8086/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes:
       - influxdb_data:/var/lib/influxdb2
     ports:
       - "8086:8086"
     networks:
       - hidroponia_network
+    aliases:
+      - influx_sensor_data
     restart: unless-stopped
 
   influxdb_init:
     image: influxdb:2.7
-    container_name: influxdb_init
+    container_name: influx_logs-errors
+    env_file: .env
+    environment:
+      INFLUX_HOST: http://influx_sensor_data:8086
     depends_on:
       - influxdb
     entrypoint: >
@@ -49,6 +65,12 @@ services:
         # Crear buckets adicionales
         influx bucket create -n error_alarms -o ${DOCKER_INFLUXDB_INIT_ORG} -r 90d --token ${DOCKER_INFLUXDB_INIT_ADMIN_TOKEN};
         influx bucket create -n logs        -o ${DOCKER_INFLUXDB_INIT_ORG} -r 30d --token ${DOCKER_INFLUXDB_INIT_ADMIN_TOKEN};
+        # espera a que API responda saludablemente
+        until influx ping --host $INFLUX_HOST --token ${DOCKER_INFLUXDB_INIT_ADMIN_TOKEN}; do sleep 2; done;
+        influx bucket create -n error_alarms -o ${DOCKER_INFLUXDB_INIT_ORG} -r 90d \
+        --host $INFLUX_HOST --token ${DOCKER_INFLUXDB_INIT_ADMIN_TOKEN};
+        influx bucket create -n logs        -o ${DOCKER_INFLUXDB_INIT_ORG} -r 30d \
+        --host $INFLUX_HOST --token ${DOCKER_INFLUXDB_INIT_ADMIN_TOKEN};
       "
     networks:
       - hidroponia_network
