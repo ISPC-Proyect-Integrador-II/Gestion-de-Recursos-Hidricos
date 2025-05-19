@@ -1,14 +1,71 @@
-version: '3.8'
-
 services:
-  api:
-    build: .
-    container_name: hidroponia_device_api
+  mysql:
+    image: mysql:8.0
+    container_name: mysql_hidroponia
+    # Cargamos todas las variables de .env
+    env_file:
+      - .env
+    environment:
+      # Estas dos ya existen en tu .env
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_ROOT_HOST:     ${MYSQL_ROOT_HOST}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # Ajusta la ruta si tu init.sql está en la raíz del proyecto
+      - ./BD/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - hidroponia_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      retries: 5
     restart: unless-stopped
+
+  influxdb:
+    image: influxdb:latest
+    container_name: influx_sensor_data
+    env_file:
+      - .env
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE:        ${DOCKER_INFLUXDB_INIT_MODE}
+      DOCKER_INFLUXDB_INIT_USERNAME:    ${DOCKER_INFLUXDB_INIT_USERNAME}
+      DOCKER_INFLUXDB_INIT_PASSWORD:    ${DOCKER_INFLUXDB_INIT_PASSWORD}
+      DOCKER_INFLUXDB_INIT_ORG:         ${DOCKER_INFLUXDB_INIT_ORG}
+      DOCKER_INFLUXDB_INIT_BUCKET:      ${DOCKER_INFLUXDB_INIT_BUCKET}
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${DOCKER_INFLUXDB_INIT_ADMIN_TOKEN}
+    ports:
+      - "8086:8086"
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+    networks:
+      - hidroponia_network
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8086/health"]
+      interval: 10s
+      retries: 5
+    restart: unless-stopped
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hidroponia_app
     env_file:
       - .env
     ports:
       - "${API_PORT}:${API_PORT}"
-    # network bridge por defecto
+    depends_on:
+      mysql:
+        condition: service_healthy
+      influxdb:
+        condition: service_healthy
     networks:
       - hidroponia_network
+
+volumes:
+  mysql_data:
+  influxdb_data:
+
+networks:
+  hidroponia_network:
+    driver: bridge

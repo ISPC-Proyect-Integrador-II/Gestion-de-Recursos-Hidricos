@@ -5,3 +5,6 @@ mysql-connector-python
 influxdb-client
 python-dotenv
 sqlalchemy
+pydantic-settings
+pymysql
+cryptography

@@ -1,12 +1,10 @@
 import json
 import threading
-import time
-
 import paho.mqtt.client as mqtt
-
 from app.config import settings
 from app.utils.logger import get_logger
 from app.services import mysql_serv, influx_serv
+from app.models.mensaje import GatewayMessage
 
 logger = get_logger("mqtt_listener")
 
@@ -28,7 +26,8 @@ class MQTTListener:
         # Creamos el cliente MQTT
         self.client = mqtt.Client()
         # Si definimos que el broker requiere usuario/clave, descomentar:
-        self.client.username_pw_set(settings.mqtt_user, settings.mqtt_password)
+        if settings.mqtt_user and settings.mqtt_password:
+            self.client.username_pw_set(settings.mqtt_user, settings.mqtt_password)
         self.client.on_connect = self._on_connect
         self.client.on_message = self._on_message
 
@@ -62,6 +61,7 @@ class MQTTListener:
     # ACCIONES AL RECIBIR MENSAJE
     #------------------------------------------
     def _on_message(self, client, userdata, msg):
+        # Decodifica y parsea el JSON
         try:
             payload = msg.payload.decode("utf-8")
             data = json.loads(payload)
@@ -70,20 +70,16 @@ class MQTTListener:
             logger.error(f"Error parseando JSON en topic '{msg.topic}': {e}")
             return
 
-        # A definir si vamos a trozear el mensaje o no
-        # Y el destino de los mismos
-        if msg.topic.startswith("hidroponia/datos"):
+        if any(msg.topic.startswith(t) for t in settings.mqtt_topics):
             try:
-                mysql_serv.save_message(data)
-                logger.info("Guardado en MySQL.")
+                # Validación del modelo de datos
+                mensaje = GatewayMessage.parse_obj(data)
+                # Guardado en ambos servicios
+                mysql_serv.save_device_info(mensaje)
+                influx_serv.save_message(mensaje)
+                logger.info("Guardado en MySQL e InfluxDB.")
             except Exception as ex:
-                logger.error(f"Error guardando en MySQL: {ex}")
-        elif msg.topic.startswith("hidroponia/datos"):
-            try:
-                influx_serv.save_message(data)
-                logger.info("Guardado en InfluxDB.")
-            except Exception as ex:
-                logger.error(f"Error guardando en InfluxDB: {ex}")
+                logger.error(f"Error guardando en servicios de BD: {ex}")
         else:
             logger.warning(f"Topic '{msg.topic}' no mapeado a ningún servicio.")
 

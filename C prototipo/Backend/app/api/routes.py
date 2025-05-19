@@ -5,7 +5,7 @@ from fastapi import status
 from fastapi import APIRouter
 
 from app.config import settings
-from app.models.mensaje import Message
+from app.models.mensaje import GatewayMessage
 from app.services import mysql_serv, influx_serv
 
 router = APIRouter()
@@ -25,13 +25,13 @@ async def list_topics():
 #------------------------------------------
 # DEVUELVE LOS ULTIMOS MENSAJES DE MYSQL E INFLUXDB
 #------------------------------------------
-@router.get("/messages", response_model=List[Message], status_code=status.HTTP_200_OK)
+@router.get("/messages", response_model=List[GatewayMessage], status_code=status.HTTP_200_OK)
 async def read_messages():
     """
     Obtiene los últimos mensajes de MySQL e InfluxDB.
     Actualmente es un placeholder; implementa según tu esquema de BD.
     """
-    result: List[Message] = []
+    result: List[GatewayMessage] = []
     try:
         result += mysql_serv.get_recent_messages()
     except Exception:

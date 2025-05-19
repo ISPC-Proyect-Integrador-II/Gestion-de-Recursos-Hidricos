@@ -15,7 +15,7 @@ logger = get_logger("main")
 #========================================
 # INICIALIZACION DE MQTT LISTENER
 #========================================
-tmpl_app.on_event("startup")
+@tmpl_app.on_event("startup")
 async def startup_event():
     logger.info("Iniciando MQTT listener...")
     listener.start()
