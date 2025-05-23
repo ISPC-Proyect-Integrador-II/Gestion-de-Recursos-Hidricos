@@ -50,7 +50,7 @@ class MQTTListener:
     def _on_connect(self, client, userdata, flags, rc):
         if rc == 0:
             logger.info("Conexión MQTT exitosa.")
-            # Nos suscribimos a cada topic
+            # Nos suscribimos a cada topic, en caso de haber mas de uno
             for topic in settings.mqtt_topics:
                 client.subscribe(topic)
                 logger.info(f"Suscrito al topic '{topic}'.")

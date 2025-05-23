@@ -1,29 +1,29 @@
 services:
-  mysql:
+  mysql:                # servicio “mysql” en la red
     image: mysql:8.0
     container_name: mysql_hidroponia
-    # Cargamos todas las variables de .env
     env_file:
       - .env
     environment:
-      # Estas dos ya existen en tu .env
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_ROOT_HOST:     ${MYSQL_ROOT_HOST}
+      MYSQL_DATABASE:      ${MYSQL_DATABASE}
+      MYSQL_USER:          ${MYSQL_USER}
+      MYSQL_PASSWORD:      ${MYSQL_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
-      # Ajusta la ruta si tu init.sql está en la raíz del proyecto
-      - ./BD/init.sql:/docker-entrypoint-initdb.d/init.sql
-    networks:
-      - hidroponia_network
+      - ./DB/init.sql:/docker-entrypoint-initdb.d/init.sql:ro    
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
       retries: 5
     restart: unless-stopped
+    networks:
+      - hidroponia_network
 
-  influxdb:
-    image: influxdb:latest
-    container_name: influx_sensor_data
+  influxdb:             # servicio “influxdb” en la red
+    image: influxdb:2.7
+    container_name: influxdb
     env_file:
       - .env
     environment:
@@ -33,32 +33,67 @@ services:
       DOCKER_INFLUXDB_INIT_ORG:         ${DOCKER_INFLUXDB_INIT_ORG}
       DOCKER_INFLUXDB_INIT_BUCKET:      ${DOCKER_INFLUXDB_INIT_BUCKET}
       DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${DOCKER_INFLUXDB_INIT_ADMIN_TOKEN}
-    ports:
-      - "8086:8086"
     volumes:
       - influxdb_data:/var/lib/influxdb2
-    networks:
-      - hidroponia_network
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:8086/health"]
+      test: ["CMD-SHELL","curl -sSf http://localhost:8086/health | grep \"\""]
       interval: 10s
       retries: 5
     restart: unless-stopped
+    networks:
+      - hidroponia_network
 
-  app:
+  app:                  # tu FastAPI + MQTT listener
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: hidroponia_app
+    container_name: backend_app
     env_file:
       - .env
-    ports:
-      - "${API_PORT}:${API_PORT}"
     depends_on:
       mysql:
         condition: service_healthy
       influxdb:
         condition: service_healthy
+    ports:
+      - "${API_PORT}:${API_PORT}"
+    restart: unless-stopped
+    networks:
+      - hidroponia_network
+
+  nginx:                # reverse-proxy HTTP y TCP
+    image: nginx:alpine
+    container_name: nginx_proxy
+    ports:
+      - "80:80"       # HTTP
+      - "443:443"     # HTTPS
+      - "3307:3306"   # MySQL TCP
+      - "8086:8086"   # Influx HTTP
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+      influxdb:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - hidroponia_network
+
+  duckdns:
+    image: linuxserver/duckdns
+    container_name: duckdns
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Argentina/Buenos_Aires
+      - SUBDOMAINS=hidroponiatest
+      - TOKEN=550f66d9-2adf-4c3e-82c3-6f39900838f2
+      - LOG=true
+    volumes:
+      - ./duckdns:/config
+    restart: unless-stopped
     networks:
       - hidroponia_network
 

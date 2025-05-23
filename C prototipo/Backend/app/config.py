@@ -14,9 +14,9 @@ class Settings(BaseSettings):
 
     # InfluxDB v2
     influx_url: str                = Field("http://influxdb:8086",       env="INFLUX_URL")
-    influx_token: str              = Field("supersecrettoken",          env="INFLUX_INIT_ADMIN_TOKEN")
-    influx_org: str                = Field("hidroponia_org",            env="INFLUX_INIT_ORG")
-    influx_bucket: str             = Field("sensor_data",                env="INFLUX_INIT_BUCKET")
+    influx_token: str              = Field("tokenpassword",          env="INFLUX_TOKEN")
+    influx_org: str                = Field("hidroponia",            env="INFLUX_ORG")
+    influx_bucket: str             = Field("lecturas",                env="INFLUX_BUCKET")
 
     # App HTTP
     api_host: str                  = Field("0.0.0.0",                    env="API_HOST")
