@@ -1,7 +1,8 @@
 #include "control.h"
 #include "sensores.h"
 
-#define BUZZER_PIN 33
+
+#define BUZZER_PIN 33;
 
 // Estado del sistema
 bool bomba_activa = false;
@@ -80,11 +81,6 @@ void verificarAlarmas() {
     } else if (ph < MIN_PH || ph > MAX_PH) {
         mensaje_alarma += "pH fuera de rango: " + String(ph) + "; ";
         alarma_activa = true;
-    }
-
-    // Notificación de alarmas
-    if (alarma_activa && client.connected()) {
-        client.publish("hidroponia/alarmas", mensaje_alarma.c_str());
     }
 }
 

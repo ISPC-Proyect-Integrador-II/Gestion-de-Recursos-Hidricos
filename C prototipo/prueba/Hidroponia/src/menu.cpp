@@ -6,7 +6,7 @@
 // Opciones del menú
 int opcionMenu = 0;
 bool pantallaNecesitaActualizacion = true;  // Inicialización global
-bool menuVisible = false;  // Definición única de la variable global
+extern bool menuVisible;
 
 
 void mostrarMenuPrincipal() {

@@ -10,6 +10,6 @@ extern bool esNodoTransmisor; // Variable para indicar si este nodo es transmiso
 void inicializarTransmisor();
 
 // Envía la información de los sensores mediante MQTT (o el canal elegido)
-void enviarDatos();
+void enviaDats();
 
 #endif 

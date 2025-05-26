@@ -1,108 +1,124 @@
-// Incluir las librerías y módulos desarrollados
 #include <Arduino.h>
+
+// Módulos del sistema
 #include "pantalla.h"
 #include "sensores.h"
 #include "control.h"
 #include "comunicacion.h"
-#include "wifi_manager.h"
 #include "rtc.h"
 #include "recetas.h"
-#include "menu.h"           // Menú principal, si es necesario
-#include "menu_recetas.h"   // Para seleccionar recetas de cultivo
-#include "menu_wifi.h"      // Para selección de red WiFi
-#include "transmisor.h"     // Modo transmisor
-#include "receptor.h"       // Modo receptor
+#include "menu.h"
+#include "menu_recetas.h"
+#include "menu_wifi.h"
+#include "transmisor.h"
+#include "receptor.h"
+#include "gsm_async.h"
+#include "wifi_manager.h"
+#include "mqtt_async.h"
 
-
-// Variables globales para el intervalo de lectura
+// Variables globales
 unsigned long ultimaLectura = 0;
-const unsigned long intervaloLectura = 5000;  // Intervalo de lectura en milisegundos (ej. 5 segundos)
-extern bool pantallaNecesitaActualizacion;  // Declaración global
+const unsigned long intervaloLectura = 5000;
+extern bool pantallaNecesitaActualizacion;
+bool menuVisible = false;  // Asegurar inicialización
 
-
-void setup() {
-  Serial.begin(9600);
-  delay(1000);
-  Serial.println("Iniciando sistema hidroponico...");
-
- // declaracion spi
+void setupPantalla() {
   SPI.begin(TFT_CLK, TFT_MISO, TFT_MOSI, TFT_CS);
-  // bienvenida
   tft.initR(INITR_BLACKTAB);
   tft.fillScreen(ST7735_BLACK);
   tft.setTextColor(ST7735_WHITE);
   tft.setTextSize(1);
-
-  // **Dibujar suelo más abajo**
   tft.fillRect(0, 150, 128, 10, BROWN);
 
-  // **Animación de crecimiento de la planta más ancha**
   for (int altura = 5; altura <= 80; altura += 3) {
-      tft.fillRect(55, 140 - altura, 18, altura, DARK_GREEN); // Tallo base más ancho
-      tft.fillRect(55, 140 - altura, 18, altura - 4, LIGHT_GREEN); // Resalte del tallo
+    tft.fillRect(55, 140 - altura, 18, altura, DARK_GREEN);
+    tft.fillRect(55, 140 - altura, 18, altura - 4, LIGHT_GREEN);
 
-      // **Hojas ovaladas simuladas con círculos y rectángulo**
-      if (altura > 15) {
-          tft.fillCircle(45, 140 - altura, 10, LIGHT_GREEN); // Lado izquierdo
-          tft.fillCircle(75, 140 - altura, 10, LIGHT_GREEN); // Lado derecho
-          tft.fillRect(45, 140 - altura - 5, 30, 10, LIGHT_GREEN); // Centro de la hoja
-      }
-      if (altura > 30) {
-          tft.fillCircle(40, 140 - altura - 10, 12, DARK_GREEN);
-          tft.fillCircle(80, 140 - altura - 10, 12, DARK_GREEN);
-          tft.fillRect(40, 140 - altura - 15, 40, 12, DARK_GREEN);
-      }
-      if (altura > 50) {
-          tft.fillCircle(55, 140 - altura - 15, 14, LIGHT_GREEN);
-          tft.fillCircle(73, 140 - altura - 15, 14, LIGHT_GREEN);
-          tft.fillRect(55, 140 - altura - 20, 18, 14, LIGHT_GREEN);
-      }
+    if (altura > 15) {
+      tft.fillCircle(45, 140 - altura, 10, LIGHT_GREEN);
+      tft.fillCircle(75, 140 - altura, 10, LIGHT_GREEN);
+      tft.fillRect(45, 140 - altura - 5, 30, 10, LIGHT_GREEN);
+    }
+    if (altura > 30) {
+      tft.fillCircle(40, 140 - altura - 10, 12, DARK_GREEN);
+      tft.fillCircle(80, 140 - altura - 10, 12, DARK_GREEN);
+      tft.fillRect(40, 140 - altura - 15, 40, 12, DARK_GREEN);
+    }
+    if (altura > 50) {
+      tft.fillCircle(55, 140 - altura - 15, 14, LIGHT_GREEN);
+      tft.fillCircle(73, 140 - altura - 15, 14, LIGHT_GREEN);
+      tft.fillRect(55, 140 - altura - 20, 18, 14, LIGHT_GREEN);
+    }
 
-      delay(250);
+    delay(250);
   }
 
-  // **Flor más grande en la cima**
-  tft.fillCircle(64, 40, 8, RED);      // Pétalos
-  tft.fillCircle(64, 40, 6, ORANGE);   // Detalle intermedio
-  tft.fillCircle(64, 40, 4, YELLOW);   // Centro de la flor
-
-  // **Mantener el logo visible unos segundos**
+  tft.fillCircle(64, 40, 8, RED);
+  tft.fillCircle(64, 40, 6, ORANGE);
+  tft.fillCircle(64, 40, 4, YELLOW);
   delay(5000);
-  inicializarDashboard();
- 
+}
+
+void setup() {
+  Serial.begin(9600);
+  delay(1000);
+  Serial.println(" Iniciando sistema hidroponico...");
+
+  // Pantalla bienvenida
+  setupPantalla();
+
+  // Espera a que WiFi se establezca completamente
+  conectarWiFi();
   
+  // Asegura que WiFi esté completamente establecido
+  delay(1000);
+
+  // Configuración MQTT
+  mqttSetup(MQTT_BROKER, MQTT_PORT);
+  mqttSetCallback(recibirMensajeMQTT);
+  
+  // Intenta conectar directamente
+  Serial.println("Conectando directamente a MQTT...");
+  getMqttClient().connect();
+  
+  // Suscripción a temas (solo después de conectar)
+  mqttSubscribe("hidroponia/control", 1);
+
+
+  // Sistema
   inicializarSensores();
   inicializarRTC();
   iniciarEEPROM();
+  inicializarDashboard();
+  gsmSetup("wap.gprs.unifon.com.ar", "wap", "wap");
+
+  // Primera lectura para no arrancar vacío
   leerDHT();
   leerLuz();
   leerGas();
 
-  
-  Serial.println("Sistema listo.");
+  Serial.println(" Sistema listo.");
 }
 
 void loop() {
-  
-   // Verificar el botón para mostrar/ocultar menú
-   if (digitalRead(BOTON_CONFIRMAR) == HIGH) {  // Si el botón se presiona
-    delay(200);  // Pequeño debounce para evitar detección errónea
-    menuVisible = !menuVisible; // Cambiar entre menú y dashboard
+  // Interacción con menú
+  if (digitalRead(BOTON_CONFIRMAR) == HIGH) {
+    delay(200);  // debounce
+    menuVisible = !menuVisible;
 
     if (menuVisible) {
-        mostrarMenuPrincipal();  // Mostrar el menú principal
+      mostrarMenuPrincipal();
     } else {
-        actualizarDashboard();  // Volver al dashboard
+      actualizarDashboard();
     }
   }
 
-  // Verificar si es momento de leer los sensores (cada intervaloLectura ms)
+  // Lectura periódica de sensores
   if (millis() - ultimaLectura >= intervaloLectura) {
-    ultimaLectura = millis();  //  Actualizamos el tiempo de la última lectura
-    
+    ultimaLectura = millis();
+
     Serial.println("===== ACTUALIZANDO SENSORES =====");
 
-    //  Solo se leen los sensores activados
     if (sensorTempAguaActivo) leerTemperaturaAgua();
     if (sensorAireActivo) leerDHT();
     if (sensorNivelAguaActivo) leerNivelAgua();
@@ -111,17 +127,28 @@ void loop() {
     if (sensorGasActivo) leerGas();
     if (sensorCorrienteActivo) leerCorriente();
     if (sensorPHActivo) leerPH();
+
     obtenerHora();
-    
-    // IMPORTANTE: Actualizar la pantalla después de leer los sensores
+    enviarDatos();
+
     if (!menuVisible) {
       actualizarDashboard();
     }
-    
-    Serial.println("===== SENSORES ACTUALIZADOS =====");
-  }
-  
-  // Pequeña pausa para estabilidad
-  delay(10);
 
+    Serial.println("===== SENSORES ACTUALIZADOS =====");
+    
+  }
+if (WiFi.status() == WL_CONNECTED && !mqttConectado) {
+  static unsigned long ultimoIntentoMQTT = 0;
+  unsigned long ahora = millis();
+  
+  // Intenta reconectar cada 5 segundos
+  if (ahora - ultimoIntentoMQTT > 5000) {
+    ultimoIntentoMQTT = ahora;
+    Serial.println("Intentando reconectar MQTT...");
+    getMqttClient().connect();
+  }
+ }
+
+  delay(10);
 }

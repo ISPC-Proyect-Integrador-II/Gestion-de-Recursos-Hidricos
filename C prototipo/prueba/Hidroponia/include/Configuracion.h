@@ -2,7 +2,9 @@
 #ifndef CONFIGURACION_H
 #define CONFIGURACION_H
 
-
+#include "ArduinoJson.h"
+#include "esp_system.h"
+String obtenerID();
 
 // Configuración General del Sistema
 #define BAUD_RATE 9600

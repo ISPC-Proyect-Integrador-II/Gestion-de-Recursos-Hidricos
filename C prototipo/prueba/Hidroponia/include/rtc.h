@@ -17,4 +17,6 @@ String obtenerHora();
 // Sincronizar hora desde MQTT
 void sincronizarHora(String nuevaHora);
 
+
+
 #endif 

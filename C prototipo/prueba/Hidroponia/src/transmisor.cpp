@@ -7,20 +7,3 @@ void inicializarTransmisor() {
     // Aquí podrías agregar inicializaciones específicas para la transmisión (por ejemplo, configurar BLE Mesh o LoRa si fuera necesario)
 }
 
-void enviarDatos() {
-    if (!esNodoTransmisor)
-        return;
-    
-    // Se genera un mensaje JSON con algunos datos relevantes.
-    // Puedes ampliar el JSON para incluir todos los parámetros que necesites.
-    String datos = "{\"tempAgua\":" + String(temperaturaAgua) +
-                   ",\"ph\":" + String(ph) +
-                   ",\"nivelAgua\":" + String(nivelAgua) + "}";
-    
-    // Publica los datos en el tópico configurado para recibir información hidropónica
-    client.publish("hidroponia/datos", datos.c_str());
-    
-    // También podrías invocar funciones para enviar datos por BLE o LoRa, dependiendo de tu configuración.
-    // enviarDatosBLE();
-    // enviarDatosLoRa();
-} 

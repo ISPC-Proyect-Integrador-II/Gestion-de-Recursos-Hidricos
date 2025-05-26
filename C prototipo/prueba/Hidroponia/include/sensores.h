@@ -12,13 +12,13 @@
 // Definiciones de pines para sensores
 #define DHT_PIN 33
 #define DHT_TYPE DHT11
-#define DS18B20_PIN 35
+#define DS18B20_PIN 25
 #define FLOW_SENSOR_PIN 34
 #define LDR_PIN 4
 #define GAS_SENSOR_PIN 36
-#define ULTRASONIC_TRIG_PIN 16
+#define ULTRASONIC_TRIG_PIN 26
 #define ULTRASONIC_ECHO_PIN 32
-#define PH_SENSOR_PIN 2
+#define PH_SENSOR_PIN 35
 
 // Variables globales para sensores
 extern float temperaturaAgua;

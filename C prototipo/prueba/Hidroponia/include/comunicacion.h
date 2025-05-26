@@ -2,47 +2,47 @@
 #define COMUNICACION_H
 
 #include <WiFi.h>
-#include <PubSubClient.h>
+#include <AsyncMqttClient.h>
 #include <LoRa.h>
 #include <BLEDevice.h>
+
 // Variables para activar/desactivar comunicación
 extern bool wifiActivo;
 extern bool loRaActivo;
 extern bool bleActivo;
 
 // Definiciones de conexión WiFi
-#define WIFI_SSID "TU_SSID"
-#define WIFI_PASSWORD "TU_PASSWORD"
+#define WIFI_SSID "DZS_5380"
+#define WIFI_PASSWORD "dzsi123456789"
 
-// Configuración MQTT
-#define MQTT_BROKER "broker.mqtt.com"
+//#define WIFI_SSID "redmi"
+//#define WIFI_PASSWORD "12345678"
+
+/// Configuración MQTT
+#define MQTT_BROKER "test.mosquitto.org"
 #define MQTT_PORT 1883
-#define MQTT_USER "usuario"
-#define MQTT_PASSWORD "password"
+
+//#define MQTT_BROKER "test.mosquitto.org"
+//#define MQTT_PORT 1883
 #define CLIENT_ID "ESP32_Hidroponico"
 
-// Definiciones LoRa
-#define LORA_CS 15
-#define LORA_RST 13
-#define LORA_DIO0 34
-#define LORA_FREQUENCY 915E6  // Ajustar según región
-
-// Variables globales
-extern WiFiClient espClient;
-extern PubSubClient client;
+// Cliente MQTT
+extern AsyncMqttClient mqttClient;
+extern bool mqttConectado;
 
 // Inicialización de comunicación
 void conectarWiFi();
-void conectarMQTT();
 void conectarLoRa();
 void conectarBLEMesh();
-
-// Funciones de transmisión y recepción
 void manejarMQTT();
 void enviarDatosMQTT();
 void enviarDatosLoRa();
 void recibirDatosLoRa();
 void enviarDatosBLE();
 void recibirDatosBLE();
+void enviarDatos();
 
-#endif 
+// Callback de recepción MQTT
+void recibirMensajeMQTT(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total);
+
+#endif

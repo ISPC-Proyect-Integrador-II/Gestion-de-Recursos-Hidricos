@@ -26,8 +26,18 @@ void gsmSetup(const char* apn, const char* user, const char* pass) {
   _pass = pass;
   SerialGSM.begin(9600, SERIAL_8N1, MODEM_RX, MODEM_TX);
   delay(3000);
-  Serial.println("GSM: reiniciando módem...");
-  modem.restart();                  // Soft-reset AT
+
+ Serial.println("GSM: comprobando comunicación...");
+
+ if (!modem.testAT()) {
+  Serial.println(" ERROR: No hay comunicación con el SIM800L");
+  _connected = false;
+  return;  // Salir si no hay respuesta AT
+}
+
+Serial.println(" Comunicación establecida con SIM800L");
+Serial.println("GSM: reiniciando módem...");
+modem.restart();  // Soft-reset AT
 }
 
 void gsmLoop() {

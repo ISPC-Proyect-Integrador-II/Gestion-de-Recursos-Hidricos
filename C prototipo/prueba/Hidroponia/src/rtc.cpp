@@ -1,4 +1,6 @@
 #include "rtc.h"
+#include <ArduinoJson.h>
+#include "esp_system.h"
 
 RTC_DS1307 rtc;
 DateTime horaActual;
@@ -40,3 +42,4 @@ void sincronizarHora(String nuevaHora) {
     rtc.adjust(DateTime(year, month, day, hour, minute, 0));
     Serial.println("Hora sincronizada desde MQTT: " + nuevaHora);
 } 
+
