@@ -65,7 +65,7 @@ class MQTTListener:
         try:
             payload = msg.payload.decode("utf-8")
             data = json.loads(payload)
-            logger.debug(f"Mensaje recibido en '{msg.topic}': {data}")
+            logger.info(f"Mensaje recibido en '{msg.topic}': {data}")
         except Exception as e:
             logger.error(f"Error parseando JSON en topic '{msg.topic}': {e}")
             return
@@ -74,10 +74,13 @@ class MQTTListener:
             try:
                 # Validación del modelo de datos
                 mensaje = GatewayMessage.parse_obj(data)
+                logger.info(f"GatewayMessage parseado: {mensaje}")
                 # Guardado en ambos servicios
                 mysql_serv.save_device_info(mensaje)
+                logger.info("Guardado en MySQL.")
+                logger.info("Invocando influx_serv.save_message()...")
                 influx_serv.save_message(mensaje)
-                logger.info("Guardado en MySQL e InfluxDB.")
+                logger.info("Guardado en InfluxDB.")
             except Exception as ex:
                 logger.error(f"Error guardando en servicios de BD: {ex}")
         else:

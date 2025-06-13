@@ -19,15 +19,17 @@ extern bool bleActivo;
 //#define WIFI_PASSWORD "12345678"
 
 /// Configuración MQTT
-#define MQTT_BROKER "test.mosquitto.org"
-#define MQTT_PORT 1883
-
+#define MQTT_BROKER "telecomunicaciones.ddns.net"
+#define MQTT_PORT 2480
+#define MQTT_USER "telecomunicaciones"
+#define MQTT_PASSWORD "cohorte*2024"
 //#define MQTT_BROKER "test.mosquitto.org"
 //#define MQTT_PORT 1883
+
 #define CLIENT_ID "ESP32_Hidroponico"
 
 // Cliente MQTT
-extern AsyncMqttClient mqttClient;
+// extern AsyncMqttClient mqttClient;
 extern bool mqttConectado;
 
 // Inicialización de comunicación

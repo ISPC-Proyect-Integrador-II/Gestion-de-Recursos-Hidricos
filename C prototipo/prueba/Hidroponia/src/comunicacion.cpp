@@ -14,7 +14,7 @@ bool bleActivo = false;
 extern bool mqttConectado;
 
 // Instancia del cliente MQTT
-AsyncMqttClient mqttClient;
+// AsyncMqttClient mqttClient;
 
 // Conexión a WiFi
 void conectarWiFi() {

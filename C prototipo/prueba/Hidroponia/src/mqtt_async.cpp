@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include "mqtt_async.h"
+#include "comunicacion.h"
 
 #ifdef USE_GSM
   #include "gsm_async.h"
@@ -81,6 +82,8 @@ void mqttSetup(const char* server, uint16_t port) {
   mqttClient.onConnect(onMqttConnect);
   mqttClient.onDisconnect(onMqttDisconnect);
   mqttClient.setServer(server, port);
+  mqttClient.setCredentials(MQTT_USER, MQTT_PASSWORD);
+  mqttClient.setClientId(CLIENT_ID);
 #endif
 }
 
