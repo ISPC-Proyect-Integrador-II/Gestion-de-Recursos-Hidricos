@@ -41,6 +41,7 @@ void recibirDatosLoRa();
 void enviarDatosBLE();
 void recibirDatosBLE();
 void enviarDatos();
+void enviarInfoDispositivo();
 
 // Callback de recepción MQTT
 void recibirMensajeMQTT(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total);
